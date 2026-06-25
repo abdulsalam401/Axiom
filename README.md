@@ -50,24 +50,55 @@
 
 ---
 
-## ⚙️ Installation
+## ⚙️ Quick Start (Cross-Platform Launchers)
+
+Axiom includes cross-platform launcher scripts that automatically handle Python virtual environment creation, pip updates, dependency installations, and UTF-8 encoding support:
+
+### 🐧 For Linux, WSL, & macOS (Bash)
+```bash
+# 1. Clone the repository
+git clone https://github.com/abdulsalam401/Axiom.git
+cd Axiom
+
+# 2. Make the launcher executable
+chmod +x axiom.sh
+
+# 3. Run Axiom (dependencies install automatically on first run)
+./axiom.sh
+```
+
+### 🪟 For Windows (PowerShell)
+```powershell
+# 1. Clone the repository
+git clone https://github.com/abdulsalam401/Axiom.git
+cd Axiom
+
+# 2. Run Axiom (dependencies install automatically on first run)
+.\axiom.ps1
+```
+
+> [!NOTE]
+> Any command-line arguments are automatically forwarded to the underlying Python app (e.g. `./axiom.sh --help` or `.\axiom.ps1 --devices`).
+
+---
+
+## 🛠️ Manual Installation (Alternative)
+
+If you prefer to set up the virtual environment manually, follow these steps:
 
 ### Step 1: Clone the Repository
-
 ```bash
 git clone https://github.com/abdulsalam401/Axiom.git
 cd Axiom
 ```
 
-### Step 2: Create Virtual Environment
-
+### Step 2: Create and Activate Virtual Environment
 ```bash
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
 ### Step 3: Install Python Dependencies
-
 ```bash
 pip install -r requirements.txt
 ```
