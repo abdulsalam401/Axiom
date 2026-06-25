@@ -1,0 +1,6 @@
+rich>=13.0.0
+requests>=2.31.0
+colorama>=0.4.6
+Pillow>=10.0.0
+numpy>=1.24.0
+keyboard>=0.13.5
