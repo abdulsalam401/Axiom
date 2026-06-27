@@ -45,6 +45,7 @@ except ImportError:
 sys.path.insert(0, os.path.dirname(__file__))
 from modules import adb_manager, apk_analyzer, network_scanner
 from modules import vulnerability_scanner, exploit_engine, payload_generator, report_generator
+from modules import bluez_exploit
 
 console = Console()
 
@@ -638,6 +639,7 @@ MENU_OPTIONS = [
     ("15", "ℹ️ ", "About",                   "About Axiom"),
     ("16", "🎮", "Remote Control",          "Wireless control & screen mirroring"),
     ("17", "🔍", "Auto-Discover & Connect", "Find & connect to devices on network"),
+    ("18", "💀", "BlueZ Exploit (CVE-2023-45866)", "Bluetooth keystroke injection exploit"),
     ("0",  "🚪", "Exit",                    "Exit Axiom"),
 ]
 
@@ -1060,7 +1062,59 @@ def handle_auto_discover():
             controller.start_gui_remote()
     else:
         console.print("[red]Failed to connect.[/]")
-
+def handle_bluez_exploit():
+    """Handle BlueZ vulnerability exploit module."""
+    console.rule("[bold red]💀 BlueZ Vulnerability Module[/]")
+    
+    console.print(Panel(
+        "[bold yellow]⚠ CRITICAL WARNING[/]\n"
+        "This module exploits CVE-2023-45866, a critical BlueZ vulnerability.\n"
+        "It allows unauthenticated keystroke injection via Bluetooth.\n\n"
+        "[bold red]ONLY USE ON DEVICES YOU OWN OR HAVE WRITTEN PERMISSION TO TEST![/]\n"
+        "Unauthorized use is illegal and unethical.",
+        border_style="red"
+    ))
+    
+    if not Confirm.ask("\n[bold red]I confirm I have authorization to test[/]", default=False):
+        console.print("[yellow]Returning to main menu.[/]")
+        return
+    
+    # Check platform and dependencies
+    import platform
+    system = platform.system()
+    console.print(f"[dim]Platform detected: {system}[/]")
+    
+    # On Windows, check for bleak instead of hciconfig
+    if system == "Windows":
+        try:
+            import bleak
+            console.print("[green]✓ Bleak library found (for Bluetooth scanning)[/]")
+        except ImportError:
+            console.print("[red]✗ Bleak library not found![/]")
+            console.print("[yellow]Install: pip install bleak[/]")
+            console.print("[dim]Without bleak, Bluetooth scanning won't work on Windows.[/]")
+            if not Confirm.ask("[cyan]Continue anyway?[/]", default=False):
+                return
+    else:
+        # On Linux/macOS, check for BlueZ tools
+        try:
+            subprocess.run(["hciconfig", "--version"], capture_output=True, check=True)
+            console.print("[green]✓ BlueZ tools found[/]")
+        except:
+            console.print("[red]✗ BlueZ tools not found![/]")
+            console.print("[yellow]Install: sudo apt install bluez bluez-utils[/]")
+            return
+    
+    # Import and run the module
+    try:
+        from modules.bluez_exploit import BlueZExploit
+        exploit = BlueZExploit()
+        exploit.interactive_menu()
+    except ImportError as e:
+        console.print(f"[red]✗ Could not import BlueZ exploit module: {e}[/]")
+        console.print("[yellow]Make sure modules/bluez_exploit.py exists[/]")
+    except Exception as e:
+        console.print(f"[red]✗ Error: {e}[/]")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  SESSION STORE
@@ -1111,6 +1165,7 @@ HANDLER_MAP = {
     "15": handle_about,
     "16": handle_remote_control,
     "17": handle_auto_discover,
+    "18": handle_bluez_exploit,
 }
 
 
@@ -1131,7 +1186,7 @@ def interactive_mode():
     while True:
         console.print()
         print_main_menu()
-        valid_choices = [str(i) for i in range(18)]  # 0-17
+        valid_choices = [str(i) for i in range(19)]  # 0-18
         choice = Prompt.ask("\n[bold cyan]Axiom ▶[/]", choices=valid_choices, show_choices=False)
 
         if choice == "0":
