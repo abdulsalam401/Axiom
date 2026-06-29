@@ -238,13 +238,23 @@ python3 axiom.py --device 192.168.10.3:5555 --screenshot
 
 ### Remote Control Commands
 ```bash
+# Auto-detect connected device and start remote control menu (Recommended)
+python3 axiom.py --remote
+# or
+python3 axiom.py -r
+
+# Auto-detect connected device and take a screenshot
+python3 axiom.py --screenshot
+# or
+python3 axiom.py -s
+
 # One-time wireless setup (USB required first)
 python3 axiom.py --remote-setup
 
-# Interactive remote control (terminal)
+# Interactive remote control (terminal) with manual IP
 python3 axiom.py --remote-control --remote-ip 192.168.10.3
 
-# GUI remote control with screen mirroring
+# GUI remote control with screen mirroring and manual IP
 python3 axiom.py --gui-remote --remote-ip 192.168.10.3
 
 # Stream screen as ASCII art

@@ -956,100 +956,137 @@ def handle_about():
 
 
 def handle_remote_control():
-    """Handle remote control module."""
+    """Handle remote control module - Simplified flow."""
     console.rule("[bold magenta]🎮 Remote Control[/]")
     
-    console.print(Panel(
-        "[bold yellow]⚠ SECURITY WARNING[/]\n\n"
-        "ADB over WiFi exposes your device to the network.\n"
-        "Use on trusted networks ONLY.\n"
-        "Disable when not in use: adb disconnect",
-        border_style="yellow"
-    ))
-    
-    if not Confirm.ask("\n[cyan]I understand the security implications[/]", default=False):
-        console.print("[yellow]Returning to main menu.[/]")
+    # Check if any devices are connected
+    devices = adb_manager.list_devices()
+    if not devices:
+        console.print("[red]✗ No devices connected![/]")
+        console.print("[yellow]Connect a device via USB or WiFi first.[/]")
         return
     
-    from modules.remote_controller import remote_control_menu, one_time_setup, quick_reconnect, RemoteController
-    remote_control_menu()
-    choice = Prompt.ask("[cyan]Select option[/]", choices=[str(i) for i in range(9)])
+    # Auto-select if only one device
+    if len(devices) == 1:
+        device_serial = devices[0]["serial"]
+        console.print(f"[green]✓ Auto-selected: {device_serial}[/]")
+        
+        # Ask what to do
+        console.print("\n[cyan]Quick Actions:[/]")
+        console.print("  [1] Start GUI Remote Control")
+        console.print("  [2] Take Screenshot")
+        console.print("  [3] Send Touch/Swipe")
+        console.print("  [4] Send Text")
+        console.print("  [0] Back")
+        
+        choice = Prompt.ask("[cyan]Select action[/]", choices=["0","1","2","3","4"], default="1")
+        
+        if choice == "0":
+            return
+        elif choice == "1":
+            _start_gui_remote(device_serial)
+        elif choice == "2":
+            _take_screenshot(device_serial)
+        elif choice == "3":
+            _send_touch_swipe(device_serial)
+        elif choice == "4":
+            _send_text(device_serial)
+        return
     
-    if choice == "1":
-        device_id = select_device()
-        if device_id:
-            one_time_setup(device_id)
+    # Multiple devices - show selection
+    console.print("\n[cyan]Connected devices:[/]")
+    for i, dev in enumerate(devices, 1):
+        console.print(f"  [{i}] {dev['serial']} ({dev['model']})")
+    
+    choice = Prompt.ask("[cyan]Select device number[/]", 
+                       choices=[str(i) for i in range(1, len(devices) + 1)])
+    idx = int(choice) - 1
+    device_serial = devices[idx]["serial"]
+    
+    # Show quick actions for selected device
+    console.print("\n[cyan]Quick Actions:[/]")
+    console.print("  [1] Start GUI Remote Control")
+    console.print("  [2] Take Screenshot")
+    console.print("  [3] Send Touch/Swipe")
+    console.print("  [4] Send Text")
+    console.print("  [0] Back")
+    
+    action = Prompt.ask("[cyan]Select action[/]", choices=["0","1","2","3","4"], default="1")
+    
+    if action == "0":
+        return
+    elif action == "1":
+        _start_gui_remote(device_serial)
+    elif action == "2":
+        _take_screenshot(device_serial)
+    elif action == "3":
+        _send_touch_swipe(device_serial)
+    elif action == "4":
+        _send_text(device_serial)
+
+
+def _start_gui_remote(device_serial: str):
+    """Start GUI remote control for a specific device."""
+    # Extract IP if wireless, or use device serial
+    if ":" in device_serial:
+        ip = device_serial.split(":")[0]
+        port = int(device_serial.split(":")[1])
+    else:
+        # For USB, try to get IP and connect wirelessly
+        console.print("[cyan]📡 Enabling WiFi ADB...[/]")
+        controller = RemoteController(device_serial)
+        if controller.setup_wireless_adb():
+            ip = controller.device_ip
+            port = 5555
+            console.print(f"[green]✓ WiFi ADB enabled at {ip}:{port}[/]")
+            console.print("[yellow]Disconnect USB cable and press Enter...[/]")
+            input()
         else:
-            console.print("[red]No device connected via USB.[/]")
+            console.print("[red]✗ Could not enable WiFi ADB.[/]")
+            return
     
-    elif choice == "2":
-        ip = Prompt.ask("[cyan]Enter device IP (or press Enter for auto)[/]", default="")
-        if ip:
-            controller = RemoteController()
-            controller.connect_wireless(ip, 5555)
-        else:
-            controller = RemoteController()
-            if controller.quick_connect_auto():
-                if Confirm.ask("[cyan]Start GUI remote control?[/]", default=True):
-                    controller.start_gui_remote()
+    # Start GUI remote
+    try:
+        from modules.gui_remote import start_gui_remote
+        start_gui_remote(ip, port)
+    except ImportError as e:
+        console.print(f"[red]✗ Could not import GUI remote module: {e}[/]")
+    except Exception as e:
+        console.print(f"[red]✗ Error starting GUI remote: {e}[/]")
+
+
+def _take_screenshot(device_serial: str):
+    """Take screenshot from device."""
+    controller = RemoteController(device_serial)
+    path = controller.capture_screen()
+    if path:
+        console.print(f"[green]✓ Screenshot saved: {path}[/]")
+
+
+def _send_touch_swipe(device_serial: str):
+    """Send touch or swipe gesture."""
+    controller = RemoteController(device_serial)
+    screen_w, screen_h = controller.get_screen_size()
+    console.print(f"[dim]Screen: {screen_w}x{screen_h}[/]")
     
-    elif choice == "3":
-        controller = RemoteController()
-        ip = Prompt.ask("[cyan]Enter device IP (or press Enter for auto)[/]", default="")
-        if ip:
-            if controller.connect_wireless(ip, 5555):
-                controller.start_gui_remote()
-        else:
-            if controller.quick_connect_auto():
-                controller.start_gui_remote()
-    
-    elif choice == "4":
-        controller = RemoteController()
-        ip = Prompt.ask("[cyan]Enter device IP[/]", default="")
-        if controller.connect_wireless(ip, 5555):
-            controller.capture_screen()
-    
-    elif choice == "5":
-        controller = RemoteController()
-        ip = Prompt.ask("[cyan]Enter device IP[/]", default="")
-        if controller.connect_wireless(ip, 5555):
-            screen_w, screen_h = controller.get_screen_size()
-            console.print(f"[dim]Screen: {screen_w}x{screen_h}[/]")
-            action = Prompt.ask("[cyan]Action (tap/swipe)[/]", choices=["tap", "swipe"])
-            if action == "tap":
-                x = IntPrompt.ask("[cyan]X coordinate[/]", default=screen_w//2)
-                y = IntPrompt.ask("[cyan]Y coordinate[/]", default=screen_h//2)
-                controller.send_touch(x, y)
-            else:
-                x1 = IntPrompt.ask("[cyan]Start X[/]")
-                y1 = IntPrompt.ask("[cyan]Start Y[/]")
-                x2 = IntPrompt.ask("[cyan]End X[/]")
-                y2 = IntPrompt.ask("[cyan]End Y[/]")
-                controller.send_swipe(x1, y1, x2, y2)
-    
-    elif choice == "6":
-        controller = RemoteController()
-        ip = Prompt.ask("[cyan]Enter device IP[/]", default="")
-        if controller.connect_wireless(ip, 5555):
-            text = Prompt.ask("[cyan]Text to type[/]")
-            controller.send_text(text)
-    
-    elif choice == "7":
-        controller = RemoteController()
-        ip = Prompt.ask("[cyan]Enter device IP[/]", default="")
-        if controller.connect_wireless(ip, 5555):
-            adb_manager.device_info(controller.device_id)
-    
-    elif choice == "8":
-        ip = Prompt.ask("[cyan]Enter device IP[/]")
-        port = IntPrompt.ask("[cyan]Port[/]", default=5555)
-        controller = RemoteController()
-        controller.connect_wireless(ip, port)
-    
-    elif choice == "0":
-        controller = RemoteController()
-        if controller.connected_wireless:
-            controller.disconnect_wireless()
+    action = Prompt.ask("[cyan]Action (tap/swipe)[/]", choices=["tap", "swipe"])
+    if action == "tap":
+        x = IntPrompt.ask("[cyan]X coordinate[/]", default=screen_w//2)
+        y = IntPrompt.ask("[cyan]Y coordinate[/]", default=screen_h//2)
+        controller.send_touch(x, y)
+    else:
+        x1 = IntPrompt.ask("[cyan]Start X[/]")
+        y1 = IntPrompt.ask("[cyan]Start Y[/]")
+        x2 = IntPrompt.ask("[cyan]End X[/]")
+        y2 = IntPrompt.ask("[cyan]End Y[/]")
+        controller.send_swipe(x1, y1, x2, y2)
+
+
+def _send_text(device_serial: str):
+    """Send text to device."""
+    controller = RemoteController(device_serial)
+    text = Prompt.ask("[cyan]Text to type[/]")
+    controller.send_text(text)
 
 
 def handle_auto_discover():
@@ -1250,7 +1287,7 @@ Examples:
     dg.add_argument("--shell",             metavar="CMD",          help="Run ADB shell command")
     dg.add_argument("--adb-shell",         action="store_true",    help="Drop into interactive ADB shell")
     dg.add_argument("--adb-wifi",          action="store_true",    help="Enable ADB over WiFi")
-    dg.add_argument("--screenshot",        action="store_true",    help="Capture device screenshot")
+    dg.add_argument("--screenshot", "-s",  action="store_true",    help="Capture device screenshot")
     dg.add_argument("--logcat",            metavar="N", type=int,  help="Capture N lines of logcat", nargs="?", const=200)
     dg.add_argument("--packages",          choices=["all","system","third_party","disabled"],
                                                                    help="List installed packages")
@@ -1271,6 +1308,7 @@ Examples:
     rc.add_argument("--remote-port",       type=int, default=5555, help="ADB over WiFi port")
     rc.add_argument("--gui-remote",        action="store_true",    help="Start GUI remote control")
     rc.add_argument("--auto-connect", "-a", action="store_true",   help="Auto-discover and connect to device")
+    rc.add_argument("--remote", "-r",      action="store_true",    help="Quick remote control (auto-detect)")
 
     # APK Analysis
     ag = p.add_argument_group("APK Analysis")
@@ -1348,6 +1386,24 @@ def cli_mode(args):
         if controller.quick_connect_auto():
             console.print("[green]✓ Connected! Starting GUI remote...[/]")
             controller.start_gui_remote()
+        return
+
+    # Quick remote control
+    if args.remote:
+        handle_remote_control()
+        return
+
+    # Quick screenshot
+    if args.screenshot:
+        target_device = device_id
+        if not target_device:
+            devices = adb_manager.list_devices()
+            if devices:
+                target_device = devices[0]["serial"]
+        if target_device:
+            _take_screenshot(target_device)
+        else:
+            console.print("[red]No devices connected.[/]")
         return
 
     # GUI Remote Control CLI
