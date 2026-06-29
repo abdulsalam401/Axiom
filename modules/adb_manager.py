@@ -15,9 +15,38 @@ from rich import box
 console = Console()
 
 
+def get_adb_path():
+    """Resolve the adb executable path, supporting local binaries in the virtual environment."""
+    import shutil
+    system_adb = shutil.which("adb")
+    if system_adb:
+        return system_adb
+
+    # Check for local adb in virtual environment folders
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    # Windows venv Scripts folder
+    win_venv_adb = os.path.join(base_dir, ".venv-win", "Scripts", "adb.exe")
+    if os.path.exists(win_venv_adb):
+        return win_venv_adb
+        
+    # Linux venv bin folder
+    nix_venv_adb = os.path.join(base_dir, ".venv", "bin", "adb")
+    if os.path.exists(nix_venv_adb):
+        return nix_venv_adb
+        
+    # General local platform-tools folder
+    local_tool_path = os.path.join(base_dir, ".platform-tools", "adb.exe" if os.name == "nt" else "adb")
+    if os.path.exists(local_tool_path):
+        return local_tool_path
+
+    return "adb"
+
+
 def run_adb(args: list, device_id: str = None, capture: bool = True):
     """Run an adb command and return stdout."""
-    cmd = ["adb"]
+    adb_path = get_adb_path()
+    cmd = [adb_path]
     if device_id:
         cmd += ["-s", device_id]
     cmd += args
@@ -31,11 +60,104 @@ def run_adb(args: list, device_id: str = None, capture: bool = True):
 
 
 def check_adb():
-    """Check if adb is installed."""
+    """Check if adb is installed, and offer automatic installation if missing."""
+    from rich.prompt import Confirm
+    import platform
+    import urllib.request
+    import zipfile
+    import tempfile
+    
     out, rc = run_adb(["version"])
-    if rc == -1:
-        console.print("[bold red]✗ ADB not found![/] Install Android Debug Bridge first.", style="red")
-        return False
+    if rc == -1 or out is None:
+        console.print("[bold red]✗ ADB not found![/]")
+        
+        if not Confirm.ask("[cyan]Would you like to automatically install Android Debug Bridge (ADB)?[/]", default=True):
+            return False
+            
+        system_os = platform.system().lower()
+        
+        # Linux (Debian/Ubuntu/Kali) via apt-get
+        if system_os == "linux":
+            import shutil
+            if shutil.which("apt-get"):
+                console.print("[yellow]System detected: Linux (Debian/Ubuntu/Kali). Using apt-get...[/]")
+                console.print("[cyan]Running: sudo apt-get update && sudo apt-get install -y adb[/]")
+                try:
+                    res = subprocess.run("sudo apt-get update && sudo apt-get install -y adb", shell=True)
+                    if res.returncode == 0:
+                        console.print("[green]✓ ADB installed successfully![/]")
+                        return True
+                    else:
+                        console.print("[red]✗ Installation failed. Please run manually: sudo apt install adb[/]")
+                        return False
+                except Exception as e:
+                    console.print(f"[red]✗ Error executing installation command: {e}[/]")
+                    return False
+            else:
+                console.print("[red]✗ Could not find apt-get package manager. Please install 'adb' using your system's package manager.[/]")
+                return False
+                
+        # macOS via Homebrew
+        elif system_os == "darwin":
+            import shutil
+            if shutil.which("brew"):
+                console.print("[yellow]System detected: macOS. Using Homebrew...[/]")
+                console.print("[cyan]Running: brew install android-platform-tools[/]")
+                try:
+                    res = subprocess.run(["brew", "install", "android-platform-tools"])
+                    if res.returncode == 0:
+                        console.print("[green]✓ ADB installed successfully![/]")
+                        return True
+                    else:
+                        console.print("[red]✗ Installation failed. Please run manually: brew install android-platform-tools[/]")
+                        return False
+                except Exception as e:
+                    console.print(f"[red]✗ Error executing installation command: {e}[/]")
+                    return False
+            else:
+                console.print("[red]✗ Homebrew not found. Please install Homebrew or manually download Android Platform Tools.[/]")
+                return False
+                
+        # Windows via Google SDK download
+        elif system_os == "windows":
+            console.print("[yellow]System detected: Windows. Downloading official Google Platform Tools...[/]")
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            target_dir = os.path.join(base_dir, ".venv-win", "Scripts")
+            if not os.path.exists(target_dir):
+                target_dir = os.path.join(base_dir, ".platform-tools")
+                os.makedirs(target_dir, exist_ok=True)
+                
+            url = "https://dl.google.com/android/repository/platform-tools-latest-windows.zip"
+            
+            try:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    zip_path = os.path.join(tmpdir, "platform-tools.zip")
+                    console.print(f"[cyan]Downloading from: {url}...[/]")
+                    urllib.request.urlretrieve(url, zip_path)
+                    
+                    console.print("[cyan]Extracting platform tools...[/]")
+                    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                        for member in zip_ref.infolist():
+                            parts = member.filename.split('/')
+                            if len(parts) > 1 and parts[1]:
+                                member.filename = os.path.join(*parts[1:])
+                                zip_ref.extract(member, target_dir)
+                                
+                console.print(f"[green]✓ ADB installed successfully in local workspace: {target_dir}[/]")
+                out, rc = run_adb(["version"])
+                if rc == 0:
+                    console.print(f"[green]✓ Verified ADB works:[/] {out.splitlines()[0]}")
+                    return True
+                else:
+                    console.print("[red]✗ Download completed but ADB verification failed.[/]")
+                    return False
+            except Exception as e:
+                console.print(f"[red]✗ Error downloading/extracting ADB: {e}[/]")
+                return False
+        else:
+            console.print(f"[red]✗ Automatic installation not supported on operating system: {system_os}[/]")
+            return False
+            
     console.print(f"[green]✓ ADB found:[/] {out.splitlines()[0]}")
     return True
 
