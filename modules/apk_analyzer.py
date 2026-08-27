@@ -278,24 +278,24 @@ def analyze_apk(apk_path: str) -> dict:
 
 def _print_analysis_results(f: dict):
     """Pretty-print analysis results."""
-    SEV_COLOR = {"CRITICAL": "bold red", "HIGH": "red", "MEDIUM": "yellow", "LOW": "cyan", "INFO": "dim"}
+    SEV_COLOR = {"CRITICAL": "bold red", "HIGH": "red", "MEDIUM": "yellow", "LOW": "bold #00ff66", "INFO": "dim green"}
 
-    console.print("\n[bold magenta]══════════ APK ANALYSIS RESULTS ══════════[/]")
+    console.print("\n[bold #00ff66]⚡ ══════════ APK ANALYSIS RESULTS ══════════ ⚡[/]\n")
 
     # Manifest info
     m = f.get("manifest", {})
     console.print(Panel(
-        f"  Package: [bold cyan]{m.get('package', 'N/A')}[/]\n"
+        f"  Package: [bold #00ffcc]{m.get('package', 'N/A')}[/]\n"
         f"  Min SDK: [yellow]{m.get('min_sdk', 'N/A')}[/]  Target SDK: [yellow]{m.get('target_sdk', 'N/A')}[/]\n"
-        f"  Debuggable: {'[bold red]YES ⚠[/]' if f['debuggable'] else '[green]No[/]'}   "
-        f"Backup Enabled: {'[bold red]YES ⚠[/]' if f['backup_enabled'] else '[green]No[/]'}   "
-        f"Obfuscated: {'[green]Yes[/]' if f['obfuscated'] else '[yellow]No[/]'}",
-        title="[bold]App Info[/]", border_style="cyan"))
+        f"  Debuggable: {'[bold red]YES ⚠[/]' if f['debuggable'] else '[bold #00ff66]No[/]'}   "
+        f"Backup Enabled: {'[bold red]YES ⚠[/]' if f['backup_enabled'] else '[bold #00ff66]No[/]'}   "
+        f"Obfuscated: {'[bold #00ff66]Yes[/]' if f['obfuscated'] else '[yellow]No[/]'}",
+        title="[bold #00ff66]⚡ App Info[/]", border_style="#00ff66", box=box.ROUNDED))
 
     # Dangerous permissions
     if f["dangerous_permissions"]:
-        pt = Table(title=f"⚠ Dangerous Permissions ({len(f['dangerous_permissions'])})",
-                   box=box.SIMPLE, border_style="red", header_style="bold red")
+        pt = Table(title=f"[bold red]⚠ Dangerous Permissions ({len(f['dangerous_permissions'])})[/]",
+                   box=box.ROUNDED, border_style="red", header_style="bold red")
         pt.add_column("Permission", style="white")
         pt.add_column("Severity", style="red")
         for p in f["dangerous_permissions"]:
@@ -306,8 +306,8 @@ def _print_analysis_results(f: dict):
     # Exported components
     for comp_type, items in f["exported_components"].items():
         if items:
-            et = Table(title=f"📤 Exported {comp_type.title()} ({len(items)})",
-                       box=box.SIMPLE, border_style="yellow", header_style="bold yellow")
+            et = Table(title=f"[bold yellow]📤 Exported {comp_type.title()} ({len(items)})[/]",
+                       box=box.ROUNDED, border_style="yellow", header_style="bold yellow")
             et.add_column("Component", style="white")
             for item in items:
                 et.add_row(item)
@@ -315,8 +315,8 @@ def _print_analysis_results(f: dict):
 
     # Secrets
     if f["secrets"]:
-        st = Table(title=f"🔑 Hardcoded Secrets ({len(f['secrets'])})",
-                   box=box.SIMPLE, border_style="red", header_style="bold red")
+        st = Table(title=f"[bold red]🔑 Hardcoded Secrets ({len(f['secrets'])})[/]",
+                   box=box.ROUNDED, border_style="red", header_style="bold red")
         st.add_column("File", style="dim")
         st.add_column("Type", style="red")
         st.add_column("Snippet", style="white")
@@ -326,14 +326,14 @@ def _print_analysis_results(f: dict):
 
     # URLs
     if f["urls"]:
-        console.print(f"\n[bold cyan]🌐 Embedded URLs ({len(f['urls'])}):[/]")
+        console.print(f"\n[bold #00ffcc]🌐 Embedded URLs ({len(f['urls'])}):[/]")
         for u in f["urls"][:15]:
-            console.print(f"  [dim]►[/] {u}")
+            console.print(f"  [dim green]►[/] {u}")
 
     # Vulnerabilities summary
     if f["vulnerabilities"]:
-        vt = Table(title=f"🚨 Vulnerabilities Found ({len(f['vulnerabilities'])})",
-                   box=box.SIMPLE_HEAVY, border_style="red", header_style="bold red")
+        vt = Table(title=f"[bold red]🚨 Vulnerabilities Found ({len(f['vulnerabilities'])})[/]",
+                   box=box.ROUNDED, border_style="red", header_style="bold red")
         vt.add_column("Finding", style="white")
         vt.add_column("Severity", style="red")
         vt.add_column("Detail", style="dim")
@@ -344,8 +344,8 @@ def _print_analysis_results(f: dict):
 
     # Native libs
     if f["libs"]:
-        console.print(f"\n[bold cyan]🔧 Native Libraries ({len(f['libs'])}):[/]")
+        console.print(f"\n[bold #00ffcc]🔧 Native Libraries ({len(f['libs'])}):[/]")
         for lib in f["libs"]:
-            console.print(f"  [dim]►[/] {lib}")
+            console.print(f"  [dim green]►[/] {lib}")
 
-    console.print("\n[bold green]✓ Static analysis complete.[/]")
+    console.print("\n[bold #00ff66]✓ Static analysis complete.[/]")

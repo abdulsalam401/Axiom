@@ -20,6 +20,14 @@ import re
 from datetime import datetime
 from typing import Optional, Tuple, List, Dict, Any
 
+# Ensure UTF-8 output encoding on Windows consoles
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 # ── Rich UI ────────────────────────────────────────────────────────────────────
 try:
     from rich.console import Console
@@ -47,7 +55,7 @@ from modules import adb_manager, apk_analyzer, network_scanner
 from modules import vulnerability_scanner, exploit_engine, payload_generator, report_generator
 from modules import bluez_exploit
 
-console = Console()
+console = Console(legacy_windows=False)
 
 VERSION     = "2.1.0"
 AUTHOR      = "Abdul Salam"
@@ -540,44 +548,59 @@ def quick_reconnect(ip: str = None, port: int = 5555) -> Optional[RemoteControll
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-#  BANNER & ANIMATION
+#  BANNER & ANIMATION (MATRIX CYBER HUD)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 BANNER_ART = r"""
-    _    __  __ _   ___   __  __ 
-   / \   \ \/ /| | / _ \ |  \/  |
-  / _ \   \  / | || | | || |\/| |
- / ___ \   /  \| || |_| || |  | |
-/_/   \_\ /_/\_\_| \___/ |_|  |_|
+ █████╗ ██╗  ██╗██╗ ██████╗ ███╗   ███╗
+██╔══██╗╚██╗██╔╝██║██╔═══██╗████╗ ████║
+███████║ ╚███╔╝ ██║██║   ██║██╔████╔██║
+██╔══██║ ██╔██╗ ██║██║   ██║██║╚██╔╝██║
+██║  ██║██╔╝ ██╗██║╚██████╔╝██║ ╚═╝ ██║
+╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝     ╚═╝
 """
 
 BANNER_LINES_GRADIENT = [
-    "magenta", "bright_magenta", "purple", "deep_pink3", "orchid", "violet"
+    "#00ff66", "#00ffaa", "#39ff14", "#00ee55", "#00cc44", "#00ff88"
 ]
 
-def get_banner_status():
+
+def get_device_status_info() -> dict:
+    """Get active connected device and status."""
     try:
         devices = adb_manager.list_devices()
-        device_count = len(devices)
-        status_color = "green" if device_count > 0 else "red"
-        device_text = f"[{status_color}]{device_count} Connected[/]"
-    except:
-        device_text = "[yellow]ADB Not Found[/]"
+        if devices:
+            d = devices[0]
+            serial = d.get("serial", "Unknown")
+            state = d.get("state", "device")
+            model = d.get("model", "Android Device")
+            conn_type = "WiFi" if ":" in serial else "USB"
+            return {
+                "count": len(devices),
+                "active_model": model,
+                "active_serial": serial,
+                "conn_type": conn_type,
+                "state": state,
+                "online": True
+            }
+    except Exception:
+        pass
+    return {
+        "count": 0,
+        "active_model": "No Device Connected",
+        "active_serial": "—",
+        "conn_type": "—",
+        "state": "offline",
+        "online": False
+    }
 
-    now = datetime.now().strftime("%H:%M:%S")
-    
-    return (
-        f"📅 [bold white]{now}[/]  |  "
-        f"📱 [bold cyan]Devices:[/] {device_text}  |  "
-        f"🚀 [bold green]v{VERSION}[/]"
-    )
 
 def animate_glitch_banner():
     from rich.markup import escape
     lines = BANNER_ART.strip("\n").split("\n")
     
-    chars = "01$#!@%^&*()_+=-[]{}|;:,.<>?/"
-    for _ in range(12):
+    chars = "01$#!@%^&*()_+=-[]{}|;:,.<>?/0101010101"
+    for _ in range(8):
         glitch_lines = []
         for line in lines:
             glitch_line = "".join(random.choice(chars) if c != " " else " " for c in line)
@@ -587,82 +610,122 @@ def animate_glitch_banner():
         console.clear()
         for gl in glitch_lines:
             console.print(Align.center(gl))
-        time.sleep(0.06)
+        time.sleep(0.04)
 
     console.clear()
-    for i, line in enumerate(lines):
-        color = BANNER_LINES_GRADIENT[i % len(BANNER_LINES_GRADIENT)]
-        console.print(Align.center(f"[bold {color}]{line}[/]"))
-        time.sleep(0.05)
+
 
 def print_banner():
     animate_glitch_banner()
+    dev_info = get_device_status_info()
+    now_time = datetime.now().strftime("%H:%M:%S")
 
-    tagline = Text("◈ ADVANCED ANDROID SECURITY FRAMEWORK ◈", style="bold italic bright_magenta")
-    console.print(Align.center(tagline))
-    console.print()
-    name = Text("Salam.Cyber1", style="bold cyan")
-    console.print(Align.center(name))
-    # made_by = Text("Project by Salam.Cyber1", style="bold dim cyan")
-    # console.print(Align.center(made_by))
-    status_text = get_banner_status()
-    console.print(Align.center(Panel(
-        status_text,
-        border_style="magenta",
-        box=box.HORIZONTALS,
-        padding=(0, 2),
-        title="[bold magenta]System Status[/]",
-        title_align="left"
-    )))
-    console.print()
+    # Banner header grid
+    banner_lines = [
+        f"[bold #00ff66]{line}[/]" for line in BANNER_ART.strip("\n").split("\n")
+    ]
+    banner_text = "\n".join(banner_lines)
+
+    header_table = Table.grid(expand=True)
+    header_table.add_column(justify="left", ratio=3)
+    header_table.add_column(justify="right", ratio=2)
+
+    meta_info = (
+        f"[bold #00ffcc]◈ ANDROID SECURITY FRAMEWORK[/]\n"
+        f"[dim green]◈ AUTHOR :[/] [bold white]{AUTHOR}[/] [dim green]| {WEBSITE}[/]\n"
+        f"[dim green]◈ SYSTEM :[/] [bold #00ff66]MATRIX CORE v{VERSION}[/]\n"
+        f"[dim green]◈ TIME   :[/] [bold white]{now_time}[/]"
+    )
+
+    header_table.add_row(banner_text, Align.right(meta_info))
+
+    console.print(Panel(
+        header_table,
+        border_style="#00ff66",
+        box=box.DOUBLE_EDGE,
+        padding=(0, 2)
+    ))
+
+    # Dual HUD Cards: Target Status & Engine Status
+    hud_grid = Table.grid(expand=True)
+    hud_grid.add_column(ratio=1)
+    hud_grid.add_column(ratio=1)
+
+    target_status = "[bold #00ff66]● CONNECTED[/]" if dev_info["online"] else "[bold #ff3366]○ STANDBY[/]"
+    target_content = (
+        f" [bold #00ffcc]Target:[/] [bold white]{dev_info['active_model']}[/]  {target_status}\n"
+        f" [dim green]Serial:[/] [bold #00ffaa]{dev_info['active_serial']}[/] [dim green]({dev_info['conn_type']})[/]  │ [dim green]Pool:[/] [bold #00ff66]{dev_info['count']} Device(s)[/]"
+    )
+
+    engine_content = (
+        f" [bold #00ffcc]ADB Daemon:[/]  [bold #00ff66]ONLINE[/]   │ [bold #00ffcc]BT Engine:[/]  [bold #00ff66]ACTIVE[/]\n"
+        f" [dim green]Session:[/]     [bold white]Matrix Operator[/] │ [dim green]Mode:[/]       [bold #00ffaa]Root/Audit[/]"
+    )
+
+    target_panel = Panel(target_content, title="[bold #00ff66]🎯 TARGET STATUS[/]", border_style="#00ff66", box=box.ROUNDED, padding=(0, 1))
+    engine_panel = Panel(engine_content, title="[bold #00ff66]⚡ ENGINE HUD[/]", border_style="#00ff66", box=box.ROUNDED, padding=(0, 1))
+
+    hud_grid.add_row(target_panel, engine_panel)
+    console.print(hud_grid)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-#  MAIN MENU
+#  2x2 MULTI-COLUMN CATEGORIZED MAIN MENU
 # ═══════════════════════════════════════════════════════════════════════════════
 
-MENU_OPTIONS = [
-    ("1",  "📱", "Device Manager",          "List & manage connected Android devices"),
-    ("2",  "🔎", "APK Static Analyzer",     "Decompile & audit an APK file"),
-    ("3",  "🌐", "Network Scanner",         "Port scan, WiFi info, host discovery"),
-    ("4",  "🚨", "Vulnerability Scanner",   "CVE mapping, root check, insecure storage"),
-    ("5",  "💥", "Exploit Engine",          "Launch activities, deep links, shell dropper"),
-    ("6",  "🎯", "Payload Generator",       "APK payloads, reverse shells, obfuscation"),
-    ("7",  "📋", "Report Generator",        "Generate HTML/JSON security report"),
-    ("8",  "📡", "ADB WiFi Connect",        "Enable & connect ADB over WiFi"),
-    ("9",  "📸", "Screenshot Capture",      "Capture device screenshot via ADB"),
-    ("10", "📦", "Package Manager",         "Enumerate installed packages"),
-    ("11", "🐛", "Logcat Analyzer",         "Capture & analyze logcat for secrets"),
-    ("12", "🔐", "SSL Pinning Check",       "Detect SSL pinning in target app"),
-    ("13", "📂", "File Transfer",           "Pull/push files from/to device"),
-    ("14", "💻", "Interactive ADB Shell",   "Drop into live ADB shell"),
-    ("15", "ℹ️ ", "About",                   "About Axiom"),
-    ("16", "🎮", "Remote Control",          "Wireless control & screen mirroring"),
-    ("17", "🔍", "Auto-Discover & Connect", "Find & connect to devices on network"),
-    ("18", "💀", "BlueZ Exploit (CVE-2023-45866)", "Bluetooth keystroke injection exploit"),
-    ("0",  "🚪", "Exit",                    "Exit Axiom"),
-]
+def _format_menu_badge(num: str, icon: str, name: str, desc: str) -> str:
+    if num == "0" or num == "00":
+        badge = f"[bold white on #33000a] {num.zfill(2)} [/]"
+    else:
+        badge = f"[bold #001a08 on #00ff66] {num.zfill(2)} [/]"
+    return f"{badge} {icon} [bold white]{name}[/]\n   [dim green]↳ {desc}[/]"
 
 
 def print_main_menu():
-    t = Table(
-        title=f"\n[bold magenta]🔮  {TOOL_NAME}  —  Main Menu[/]\n",
-        box=box.DOUBLE_EDGE,
-        border_style="magenta",
-        header_style="bold cyan",
-        show_lines=True,
-        min_width=70,
-    )
-    t.add_column("  #  ",   style="bold cyan",   width=5,  no_wrap=True)
-    t.add_column("  ",      style="",             width=3,  no_wrap=True)
-    t.add_column("Module",  style="bold white",   min_width=24)
-    t.add_column("Description", style="dim",      min_width=38)
+    cat1_items = [
+        _format_menu_badge("1",  "📱", "Device Hardware & OS Info", "List & inspect connected devices"),
+        _format_menu_badge("2",  "🔎", "APK Static Decompiler",     "Audit manifests, secrets & code"),
+        _format_menu_badge("3",  "🌐", "Network Port Scanner",      "Scan open ports & WiFi subnets"),
+        _format_menu_badge("4",  "🚨", "Vulnerability & CVEs",      "SDK mapping, root check & storage"),
+        _format_menu_badge("12", "🔐", "SSL Pinning & Proxy Audit", "Detect SSL pinning & trust managers"),
+    ]
 
-    for num, icon, name, desc in MENU_OPTIONS:
-        style = "on #1a0030" if num == "0" else ""
-        t.add_row(f"[bold cyan] {num} [/]", icon, name, desc, style=style)
+    cat2_items = [
+        _format_menu_badge("5",  "💥", "Exploit Engine",            "Exported activities & deep links"),
+        _format_menu_badge("6",  "🎯", "Payload Generator",         "MSF APK payloads & reverse shells"),
+        _format_menu_badge("18", "💀", "BlueZ Keystroke Exploit",   "CVE-2023-45866 Bluetooth injection"),
+        _format_menu_badge("14", "💻", "Interactive Root Shell",    "Drop into live ADB shell session"),
+        _format_menu_badge("13", "📂", "Push / Pull File Transfer", "Transfer exploits & pull databases"),
+    ]
 
-    console.print(t)
+    cat3_items = [
+        _format_menu_badge("16", "🎮", "GUI Remote & Mirror",       "Low-latency wireless control"),
+        _format_menu_badge("17", "🔍", "Auto-Discover & Connect",   "Scan subnet & auto-pair wireless"),
+        _format_menu_badge("8",  "📡", "Enable ADB over WiFi (TCP)","Switch USB session to wireless"),
+        _format_menu_badge("9",  "📸", "Instant Screenshot",        "Grab screen capture from device"),
+    ]
+
+    cat4_items = [
+        _format_menu_badge("7",  "📋", "Generate Security Report",  "Export HTML & JSON executive audits"),
+        _format_menu_badge("10", "📦", "Package Manager",           "Enumerate third-party & system APKs"),
+        _format_menu_badge("11", "🐛", "Logcat Secret Sniffer",     "Live monitor logcat for leakages"),
+        _format_menu_badge("15", "ℹ️ ", "About Axiom Framework",     "Author, contact & project metadata"),
+        _format_menu_badge("0",  "🚪", "Exit Session",              "Safely close remote connections"),
+    ]
+
+    p1 = Panel("\n".join(cat1_items), title="[bold #00ffaa]📡 01. RECON & AUDIT[/]", border_style="#00ff66", box=box.ROUNDED, padding=(1, 1))
+    p2 = Panel("\n".join(cat2_items), title="[bold #00ffaa]💀 02. EXPLOIT & ATTACK[/]", border_style="#00ff66", box=box.ROUNDED, padding=(1, 1))
+    p3 = Panel("\n".join(cat3_items), title="[bold #00ffaa]🎮 03. REMOTE & WIRELESS[/]", border_style="#00ff66", box=box.ROUNDED, padding=(1, 1))
+    p4 = Panel("\n".join(cat4_items), title="[bold #00ffaa]🛠️  04. UTILITIES & REPORTS[/]", border_style="#00ff66", box=box.ROUNDED, padding=(1, 1))
+
+    grid = Table.grid(expand=True)
+    grid.add_column(ratio=1)
+    grid.add_column(ratio=1)
+
+    grid.add_row(p1, p2)
+    grid.add_row(p3, p4)
+
+    console.print(grid)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -675,9 +738,9 @@ def select_device() -> Optional[str]:
         return None
     if len(devices) == 1:
         dev = devices[0]["serial"]
-        console.print(f"[green]Auto-selected device:[/] {dev}")
+        console.print(f"[bold #00ff66]✓ Auto-selected device:[/] [bold #00ffcc]{dev}[/]")
         return dev
-    serial = Prompt.ask("[cyan]Enter device serial[/]")
+    serial = Prompt.ask("[#00ffcc]Enter device serial[/]")
     return serial
 
 
@@ -686,7 +749,7 @@ def select_device() -> Optional[str]:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def handle_device_manager():
-    console.rule("[bold magenta]📱 Device Manager[/]")
+    console.rule("[bold #00ff66]📱 Device Manager[/]")
     adb_manager.check_adb()
     device_id = select_device()
     if not device_id:
@@ -695,17 +758,17 @@ def handle_device_manager():
 
 
 def handle_apk_analyzer():
-    console.rule("[bold magenta]🔎 APK Static Analyzer[/]")
-    apk_path = Prompt.ask("[cyan]APK file path[/]")
+    console.rule("[bold #00ff66]🔎 APK Static Analyzer[/]")
+    apk_path = Prompt.ask("[#00ffcc]APK file path[/]")
     findings = apk_analyzer.analyze_apk(apk_path)
-    if Confirm.ask("[cyan]Save findings to report?[/]", default=True):
+    if Confirm.ask("[#00ffcc]Save findings to report?[/]", default=True):
         _save_to_session(findings, "apk_analysis")
-        console.print("[green]✓ Added to session report.[/]")
+        console.print("[bold #00ff66]✓ Added to session report.[/]")
 
 
 def handle_network_scanner():
-    console.rule("[bold magenta]🌐 Network Scanner[/]")
-    choice = Prompt.ask("[cyan]Scan mode[/]", choices=["device", "host", "wifi", "discover", "mitm"], default="device")
+    console.rule("[bold #00ff66]🌐 Network Scanner[/]")
+    choice = Prompt.ask("[#00ffcc]Scan mode[/]", choices=["device", "host", "wifi", "discover", "mitm"], default="device")
 
     if choice == "device":
         device_id = select_device()
@@ -713,14 +776,14 @@ def handle_network_scanner():
             return
         ip = network_scanner.get_device_ip(device_id)
         if ip:
-            console.print(f"[green]Device IP:[/] {ip}")
+            console.print(f"[bold #00ff66]Device IP:[/] [bold #00ffcc]{ip}[/]")
             network_scanner.port_scan(ip)
         else:
             console.print("[red]Could not determine device IP.[/]")
 
     elif choice == "host":
-        target = Prompt.ask("[cyan]Target IP/hostname[/]")
-        port_range = Prompt.ask("[cyan]Port range (comma-list or 'all')[/]", default="common")
+        target = Prompt.ask("[#00ffcc]Target IP/hostname[/]")
+        port_range = Prompt.ask("[#00ffcc]Port range (comma-list or 'all')[/]", default="common")
         if port_range == "all":
             ports = list(range(1, 65536))
         elif port_range == "common":
@@ -735,7 +798,7 @@ def handle_network_scanner():
             network_scanner.get_wifi_info(device_id)
 
     elif choice == "discover":
-        subnet = Prompt.ask("[cyan]Subnet (e.g. 192.168.1)[/]")
+        subnet = Prompt.ask("[#00ffcc]Subnet (e.g. 192.168.1)[/]")
         network_scanner.discover_devices(subnet)
 
     elif choice == "mitm":
@@ -743,55 +806,55 @@ def handle_network_scanner():
 
 
 def handle_vulnerability_scanner():
-    console.rule("[bold magenta]🚨 Vulnerability Scanner[/]")
+    console.rule("[bold #00ff66]🚨 Vulnerability Scanner[/]")
     device_id = select_device()
     if not device_id:
         return
-    pkg = Prompt.ask("[cyan]Target package (leave blank for device-level only)[/]", default="")
+    pkg = Prompt.ask("[#00ffcc]Target package (leave blank for device-level only)[/]", default="")
     report = vulnerability_scanner.full_vulnerability_scan(device_id, pkg or None)
     _save_to_session(report, "vulnerability_scan")
 
 
 def handle_exploit_engine():
-    console.rule("[bold magenta]💥 Exploit Engine[/]")
+    console.rule("[bold #00ff66]💥 Exploit Engine[/]")
     device_id = select_device()
     if not device_id:
         return
 
     exploit_engine.exploit_menu(device_id)
-    choice = Prompt.ask("[red]Select exploit[/]", choices=[str(i) for i in range(10)])
+    choice = Prompt.ask("[bold red]Select exploit[/]", choices=[str(i) for i in range(10)])
 
     if choice == "1":
-        pkg = Prompt.ask("[cyan]Package name[/]")
-        act = Prompt.ask("[cyan]Activity class[/]")
+        pkg = Prompt.ask("[#00ffcc]Package name[/]")
+        act = Prompt.ask("[#00ffcc]Activity class[/]")
         exploit_engine.launch_exported_activity(device_id, pkg, act)
 
     elif choice == "2":
-        pkg = Prompt.ask("[cyan]Package name[/]")
-        action = Prompt.ask("[cyan]Intent action[/]")
+        pkg = Prompt.ask("[#00ffcc]Package name[/]")
+        action = Prompt.ask("[#00ffcc]Intent action[/]")
         exploit_engine.trigger_broadcast_receiver(device_id, pkg, action)
 
     elif choice == "3":
-        uri = Prompt.ask("[cyan]Content provider URI (content://...)[/]")
+        uri = Prompt.ask("[#00ffcc]Content provider URI (content://...)[/]")
         exploit_engine.extract_content_provider(device_id, uri)
 
     elif choice == "4":
-        pkg = Prompt.ask("[cyan]Package name[/]")
-        scheme = Prompt.ask("[cyan]Deep link scheme (e.g. myapp)[/]")
+        pkg = Prompt.ask("[#00ffcc]Package name[/]")
+        scheme = Prompt.ask("[#00ffcc]Deep link scheme (e.g. myapp)[/]")
         exploit_engine.deep_link_fuzzer(device_id, pkg, scheme)
 
     elif choice == "5":
-        pkg = Prompt.ask("[cyan]Package name[/]")
+        pkg = Prompt.ask("[#00ffcc]Package name[/]")
         exploit_engine.frida_injection_guide(pkg)
 
     elif choice == "6":
-        lhost = Prompt.ask("[cyan]LHOST[/]")
-        lport = IntPrompt.ask("[cyan]LPORT[/]", default=4444)
+        lhost = Prompt.ask("[#00ffcc]LHOST[/]")
+        lport = IntPrompt.ask("[#00ffcc]LPORT[/]", default=4444)
         exploit_engine.shell_payload_dropper(device_id, lhost, lport)
 
     elif choice == "7":
-        pkg = Prompt.ask("[cyan]Package name[/]")
-        db = Prompt.ask("[cyan]Database filename[/]")
+        pkg = Prompt.ask("[#00ffcc]Package name[/]")
+        db = Prompt.ask("[#00ffcc]Database filename[/]")
         exploit_engine.extract_database(device_id, pkg, db)
 
     elif choice == "8":
@@ -802,57 +865,57 @@ def handle_exploit_engine():
 
 
 def handle_payload_generator():
-    console.rule("[bold magenta]🎯 Payload Generator[/]")
+    console.rule("[bold #00ff66]🎯 Payload Generator[/]")
     payload_generator.payload_menu()
-    choice = Prompt.ask("[red]Select payload type[/]", choices=["1", "2", "3", "4", "5", "0"])
+    choice = Prompt.ask("[bold red]Select payload type[/]", choices=["1", "2", "3", "4", "5", "0"])
 
     if choice == "1":
-        lhost = Prompt.ask("[cyan]LHOST[/]")
-        lport = IntPrompt.ask("[cyan]LPORT[/]", default=4444)
-        ptype = Prompt.ask("[cyan]Payload type[/]",
+        lhost = Prompt.ask("[#00ffcc]LHOST[/]")
+        lport = IntPrompt.ask("[#00ffcc]LPORT[/]", default=4444)
+        ptype = Prompt.ask("[#00ffcc]Payload type[/]",
                              choices=["reverse_tcp", "reverse_https", "reverse_http", "shell_tcp"],
                              default="reverse_tcp")
-        output = Prompt.ask("[cyan]Output file[/]", default="payload.apk")
+        output = Prompt.ask("[#00ffcc]Output file[/]", default="payload.apk")
         payload_generator.generate_msfvenom_apk(lhost, lport, ptype, output)
 
     elif choice == "2":
-        action = Prompt.ask("[cyan]Intent action[/]")
-        comp = Prompt.ask("[cyan]Component (pkg/class or blank)[/]", default="")
-        data = Prompt.ask("[cyan]Data URI (or blank)[/]", default="")
+        action = Prompt.ask("[#00ffcc]Intent action[/]")
+        comp = Prompt.ask("[#00ffcc]Component (pkg/class or blank)[/]", default="")
+        data = Prompt.ask("[#00ffcc]Data URI (or blank)[/]", default="")
         payload_generator.generate_intent_payload(action, comp or None, data or None)
 
     elif choice == "3":
-        lhost = Prompt.ask("[cyan]LHOST[/]")
-        lport = IntPrompt.ask("[cyan]LPORT[/]", default=4444)
+        lhost = Prompt.ask("[#00ffcc]LHOST[/]")
+        lport = IntPrompt.ask("[#00ffcc]LPORT[/]", default=4444)
         payload_generator.generate_reverse_shell_commands(lhost, lport)
 
     elif choice == "4":
-        lhost = Prompt.ask("[cyan]LHOST[/]")
-        lport = IntPrompt.ask("[cyan]LPORT[/]", default=4444)
-        output = Prompt.ask("[cyan]Script filename[/]", default="adb_payload.sh")
+        lhost = Prompt.ask("[#00ffcc]LHOST[/]")
+        lport = IntPrompt.ask("[#00ffcc]LPORT[/]", default=4444)
+        output = Prompt.ask("[#00ffcc]Script filename[/]", default="adb_payload.sh")
         payload_generator.generate_adb_payload_script(None, lhost, lport, output)
 
     elif choice == "5":
-        raw = Prompt.ask("[cyan]Payload to obfuscate[/]")
-        method = Prompt.ask("[cyan]Obfuscation method[/]", choices=["base64", "hex"], default="base64")
+        raw = Prompt.ask("[#00ffcc]Payload to obfuscate[/]")
+        method = Prompt.ask("[#00ffcc]Obfuscation method[/]", choices=["base64", "hex"], default="base64")
         payload_generator.obfuscate_payload(raw, method)
 
 
 def handle_report_generator():
-    console.rule("[bold magenta]📋 Report Generator[/]")
-    target = Prompt.ask("[cyan]Target description (app/device name)[/]", default="Unknown Target")
+    console.rule("[bold #00ff66]📋 Report Generator[/]")
+    target = Prompt.ask("[#00ffcc]Target description (app/device name)[/]", default="Unknown Target")
 
     data = _get_session()
     data["target"] = target
 
-    fmt = Prompt.ask("[cyan]Report format[/]", choices=["html", "json", "both", "table"], default="html")
+    fmt = Prompt.ask("[#00ffcc]Report format[/]", choices=["html", "json", "both", "table"], default="html")
 
     if fmt in ("html", "both"):
-        out = Prompt.ask("[cyan]HTML output filename[/]", default="axiom_report.html")
+        out = Prompt.ask("[#00ffcc]HTML output filename[/]", default="axiom_report.html")
         report_generator.generate_html_report(data, out)
 
     if fmt in ("json", "both"):
-        out = Prompt.ask("[cyan]JSON output filename[/]", default="axiom_report.json")
+        out = Prompt.ask("[#00ffcc]JSON output filename[/]", default="axiom_report.json")
         report_generator.generate_json_report(data, out)
 
     if fmt == "table":
@@ -860,71 +923,71 @@ def handle_report_generator():
 
 
 def handle_adb_wifi():
-    console.rule("[bold magenta]📡 ADB WiFi Connect[/]")
+    console.rule("[bold #00ff66]📡 ADB WiFi Connect[/]")
     device_id = select_device()
     if not device_id:
         return
-    port = IntPrompt.ask("[cyan]Port[/]", default=5555)
+    port = IntPrompt.ask("[#00ffcc]Port[/]", default=5555)
     ip, p = adb_manager.enable_adb_wifi(device_id, port)
 
 
 def handle_screenshot():
-    console.rule("[bold magenta]📸 Screenshot Capture[/]")
+    console.rule("[bold #00ff66]📸 Screenshot Capture[/]")
     device_id = select_device()
     if not device_id:
         return
     path = adb_manager.take_screenshot(device_id)
     if path:
-        console.print(f"[bold green]✓ Screenshot saved:[/] {path}")
+        console.print(f"[bold #00ff66]✓ Screenshot saved:[/] [bold #00ffcc]{path}[/]")
 
 
 def handle_package_manager():
-    console.rule("[bold magenta]📦 Package Manager[/]")
+    console.rule("[bold #00ff66]📦 Package Manager[/]")
     device_id = select_device()
     if not device_id:
         return
-    pkg_type = Prompt.ask("[cyan]Package filter[/]",
+    pkg_type = Prompt.ask("[#00ffcc]Package filter[/]",
                            choices=["all", "system", "third_party", "disabled"],
                            default="third_party")
     adb_manager.list_packages(device_id, pkg_type)
 
 
 def handle_logcat():
-    console.rule("[bold magenta]🐛 Logcat Analyzer[/]")
+    console.rule("[bold #00ff66]🐛 Logcat Analyzer[/]")
     device_id = select_device()
     if not device_id:
         return
-    lines = IntPrompt.ask("[cyan]Lines to capture[/]", default=300)
+    lines = IntPrompt.ask("[#00ffcc]Lines to capture[/]", default=300)
     adb_manager.capture_logcat(device_id, lines)
 
 
 def handle_ssl_check():
-    console.rule("[bold magenta]🔐 SSL Pinning Check[/]")
+    console.rule("[bold #00ff66]🔐 SSL Pinning Check[/]")
     device_id = select_device()
     if not device_id:
         return
-    pkg = Prompt.ask("[cyan]Package name[/]")
+    pkg = Prompt.ask("[#00ffcc]Package name[/]")
     network_scanner.check_ssl_pinning(device_id, pkg)
 
 
 def handle_file_transfer():
-    console.rule("[bold magenta]📂 File Transfer[/]")
+    console.rule("[bold #00ff66]📂 File Transfer[/]")
     device_id = select_device()
     if not device_id:
         return
-    direction = Prompt.ask("[cyan]Direction[/]", choices=["pull", "push"])
+    direction = Prompt.ask("[#00ffcc]Direction[/]", choices=["pull", "push"])
     if direction == "pull":
-        remote = Prompt.ask("[cyan]Remote path (on device)[/]")
-        local = Prompt.ask("[cyan]Local destination[/]", default=".")
+        remote = Prompt.ask("[#00ffcc]Remote path (on device)[/]")
+        local = Prompt.ask("[#00ffcc]Local destination[/]", default=".")
         adb_manager.pull_file(device_id, remote, local)
     else:
-        local = Prompt.ask("[cyan]Local file path[/]")
-        remote = Prompt.ask("[cyan]Remote destination (on device)[/]")
+        local = Prompt.ask("[#00ffcc]Local file path[/]")
+        remote = Prompt.ask("[#00ffcc]Remote destination (on device)[/]")
         adb_manager.push_file(device_id, local, remote)
 
 
 def handle_adb_shell():
-    console.rule("[bold magenta]💻 Interactive ADB Shell[/]")
+    console.rule("[bold #00ff66]💻 Interactive ADB Shell[/]")
     device_id = select_device()
     if not device_id:
         return
@@ -934,22 +997,22 @@ def handle_adb_shell():
 def handle_about():
     about = Panel(
         f"\n"
-        f"  [bold magenta]🔮  {TOOL_NAME} v{VERSION}[/]\n\n"
-        f"  [bold cyan]Advanced Android Security Assessment Framework[/]\n\n"
+        f"  [bold #00ff66]⚡  {TOOL_NAME} v{VERSION}[/]\n\n"
+        f"  [bold #00ffcc]Advanced Android Security Assessment Framework[/]\n\n"
         f"  [white]A comprehensive tool for ethical hackers and security professionals.\n"
         f"  Covers static APK analysis, dynamic runtime analysis via ADB,\n"
         f"  network scanning, vulnerability mapping, exploit assistance,\n"
         f"  payload generation, professional report generation, and\n"
-        f"  [bold green]wireless remote control with screen mirroring[/].\n\n"
-        f"  [bold magenta]Author   :[/] [white]{AUTHOR}[/]\n"
-        f"  [bold magenta]Website  :[/] [cyan]{WEBSITE}[/]\n"
-        f"  [bold magenta]LinkedIn :[/] [cyan]{LINKEDIN}[/]\n"
-        f"  [bold magenta]GitHub   :[/] [cyan]{GITHUB}[/]\n"
-        f"  [bold magenta]Year     :[/] [white]{YEAR}[/]\n\n"
+        f"  [bold #00ff66]wireless remote control with screen mirroring[/].\n\n"
+        f"  [bold #00ff66]Author   :[/] [white]{AUTHOR}[/]\n"
+        f"  [bold #00ff66]Website  :[/] [bold #00ffcc]{WEBSITE}[/]\n"
+        f"  [bold #00ff66]LinkedIn :[/] [bold #00ffcc]{LINKEDIN}[/]\n"
+        f"  [bold #00ff66]GitHub   :[/] [bold #00ffcc]{GITHUB}[/]\n"
+        f"  [bold #00ff66]Year     :[/] [white]{YEAR}[/]\n\n"
         f"  [bold red]⚠  For authorized penetration testing use only.[/]\n"
         f"  [dim]Unauthorized use is illegal and unethical.[/]\n",
-        title="[bold]About Axiom[/]",
-        border_style="magenta",
+        title="[bold #00ff66]⚡ About Axiom[/]",
+        border_style="#00ff66",
         padding=(0, 4),
     )
     console.print(about)
@@ -957,7 +1020,7 @@ def handle_about():
 
 def handle_remote_control():
     """Handle remote control module - Simplified flow."""
-    console.rule("[bold magenta]🎮 Remote Control[/]")
+    console.rule("[bold #00ff66]🎮 Remote Control[/]")
     
     # Check if any devices are connected
     devices = adb_manager.list_devices()
@@ -969,17 +1032,17 @@ def handle_remote_control():
     # Auto-select if only one device
     if len(devices) == 1:
         device_serial = devices[0]["serial"]
-        console.print(f"[green]✓ Auto-selected: {device_serial}[/]")
+        console.print(f"[bold #00ff66]✓ Auto-selected:[/] [bold #00ffcc]{device_serial}[/]")
         
         # Ask what to do
-        console.print("\n[cyan]Quick Actions:[/]")
-        console.print("  [1] Start GUI Remote Control")
-        console.print("  [2] Take Screenshot")
-        console.print("  [3] Send Touch/Swipe")
-        console.print("  [4] Send Text")
-        console.print("  [0] Back")
+        console.print("\n[bold #00ffcc]Quick Actions:[/]")
+        console.print("  [#00ff66][1][/] Start GUI Remote Control")
+        console.print("  [#00ff66][2][/] Take Screenshot")
+        console.print("  [#00ff66][3][/] Send Touch/Swipe")
+        console.print("  [#00ff66][4][/] Send Text")
+        console.print("  [#00ff66][0][/] Back")
         
-        choice = Prompt.ask("[cyan]Select action[/]", choices=["0","1","2","3","4"], default="1")
+        choice = Prompt.ask("[#00ffcc]Select action[/]", choices=["0","1","2","3","4"], default="1")
         
         if choice == "0":
             return
@@ -994,24 +1057,24 @@ def handle_remote_control():
         return
     
     # Multiple devices - show selection
-    console.print("\n[cyan]Connected devices:[/]")
+    console.print("\n[bold #00ffcc]Connected devices:[/]")
     for i, dev in enumerate(devices, 1):
         console.print(f"  [{i}] {dev['serial']} ({dev['model']})")
     
-    choice = Prompt.ask("[cyan]Select device number[/]", 
+    choice = Prompt.ask("[#00ffcc]Select device number[/]", 
                        choices=[str(i) for i in range(1, len(devices) + 1)])
     idx = int(choice) - 1
     device_serial = devices[idx]["serial"]
     
     # Show quick actions for selected device
-    console.print("\n[cyan]Quick Actions:[/]")
-    console.print("  [1] Start GUI Remote Control")
-    console.print("  [2] Take Screenshot")
-    console.print("  [3] Send Touch/Swipe")
-    console.print("  [4] Send Text")
-    console.print("  [0] Back")
+    console.print("\n[bold #00ffcc]Quick Actions:[/]")
+    console.print("  [#00ff66][1][/] Start GUI Remote Control")
+    console.print("  [#00ff66][2][/] Take Screenshot")
+    console.print("  [#00ff66][3][/] Send Touch/Swipe")
+    console.print("  [#00ff66][4][/] Send Text")
+    console.print("  [#00ff66][0][/] Back")
     
-    action = Prompt.ask("[cyan]Select action[/]", choices=["0","1","2","3","4"], default="1")
+    action = Prompt.ask("[#00ffcc]Select action[/]", choices=["0","1","2","3","4"], default="1")
     
     if action == "0":
         return
@@ -1033,12 +1096,12 @@ def _start_gui_remote(device_serial: str):
         port = int(device_serial.split(":")[1])
     else:
         # For USB, try to get IP and connect wirelessly
-        console.print("[cyan]📡 Enabling WiFi ADB...[/]")
+        console.print("[#00ffcc]📡 Enabling WiFi ADB...[/]")
         controller = RemoteController(device_serial)
         if controller.setup_wireless_adb():
             ip = controller.device_ip
             port = 5555
-            console.print(f"[green]✓ WiFi ADB enabled at {ip}:{port}[/]")
+            console.print(f"[bold #00ff66]✓ WiFi ADB enabled at {ip}:{port}[/]")
             console.print("[yellow]Disconnect USB cable and press Enter...[/]")
             input()
         else:
@@ -1060,7 +1123,7 @@ def _take_screenshot(device_serial: str):
     controller = RemoteController(device_serial)
     path = controller.capture_screen()
     if path:
-        console.print(f"[green]✓ Screenshot saved: {path}[/]")
+        console.print(f"[bold #00ff66]✓ Screenshot saved:[/] [bold #00ffcc]{path}[/]")
 
 
 def _send_touch_swipe(device_serial: str):
@@ -1069,36 +1132,38 @@ def _send_touch_swipe(device_serial: str):
     screen_w, screen_h = controller.get_screen_size()
     console.print(f"[dim]Screen: {screen_w}x{screen_h}[/]")
     
-    action = Prompt.ask("[cyan]Action (tap/swipe)[/]", choices=["tap", "swipe"])
+    action = Prompt.ask("[#00ffcc]Action (tap/swipe)[/]", choices=["tap", "swipe"])
     if action == "tap":
-        x = IntPrompt.ask("[cyan]X coordinate[/]", default=screen_w//2)
-        y = IntPrompt.ask("[cyan]Y coordinate[/]", default=screen_h//2)
+        x = IntPrompt.ask("[#00ffcc]X coordinate[/]", default=screen_w//2)
+        y = IntPrompt.ask("[#00ffcc]Y coordinate[/]", default=screen_h//2)
         controller.send_touch(x, y)
     else:
-        x1 = IntPrompt.ask("[cyan]Start X[/]")
-        y1 = IntPrompt.ask("[cyan]Start Y[/]")
-        x2 = IntPrompt.ask("[cyan]End X[/]")
-        y2 = IntPrompt.ask("[cyan]End Y[/]")
+        x1 = IntPrompt.ask("[#00ffcc]Start X[/]")
+        y1 = IntPrompt.ask("[#00ffcc]Start Y[/]")
+        x2 = IntPrompt.ask("[#00ffcc]End X[/]")
+        y2 = IntPrompt.ask("[#00ffcc]End Y[/]")
         controller.send_swipe(x1, y1, x2, y2)
 
 
 def _send_text(device_serial: str):
     """Send text to device."""
     controller = RemoteController(device_serial)
-    text = Prompt.ask("[cyan]Text to type[/]")
+    text = Prompt.ask("[#00ffcc]Text to type[/]")
     controller.send_text(text)
 
 
 def handle_auto_discover():
     """Auto-discover and connect to device with GUI."""
-    console.rule("[bold cyan]🔍 Auto-Discover & Connect[/]")
+    console.rule("[bold #00ff66]🔍 Auto-Discover & Connect[/]")
     controller = RemoteController()
     if controller.quick_connect_auto():
-        console.print("[green]✓ Connected successfully![/]")
-        if Confirm.ask("[cyan]Start GUI remote control?[/]", default=True):
+        console.print("[bold #00ff66]✓ Connected successfully![/]")
+        if Confirm.ask("[#00ffcc]Start GUI remote control?[/]", default=True):
             controller.start_gui_remote()
     else:
         console.print("[red]Failed to connect.[/]")
+
+
 def handle_bluez_exploit():
     """Handle BlueZ vulnerability exploit module."""
     console.rule("[bold red]💀 BlueZ Vulnerability Module[/]")
@@ -1125,18 +1190,18 @@ def handle_bluez_exploit():
     if system == "Windows":
         try:
             import bleak
-            console.print("[green]✓ Bleak library found (for Bluetooth scanning)[/]")
+            console.print("[bold #00ff66]✓ Bleak library found (for Bluetooth scanning)[/]")
         except ImportError:
             console.print("[red]✗ Bleak library not found![/]")
             console.print("[yellow]Install: pip install bleak[/]")
             console.print("[dim]Without bleak, Bluetooth scanning won't work on Windows.[/]")
-            if not Confirm.ask("[cyan]Continue anyway?[/]", default=False):
+            if not Confirm.ask("[#00ffcc]Continue anyway?[/]", default=False):
                 return
     else:
         # On Linux/macOS, check for BlueZ tools
         try:
             subprocess.run(["hciconfig", "--version"], capture_output=True, check=True)
-            console.print("[green]✓ BlueZ tools found[/]")
+            console.print("[bold #00ff66]✓ BlueZ tools found[/]")
         except:
             console.print("[red]✗ BlueZ tools not found![/]")
             console.print("[yellow]Install: sudo apt install bluez bluez-utils[/]")
@@ -1223,8 +1288,13 @@ def interactive_mode():
     while True:
         console.print()
         print_main_menu()
-        valid_choices = [str(i) for i in range(19)]  # 0-18
-        choice = Prompt.ask("\n[bold cyan]Axiom ▶[/]", choices=valid_choices, show_choices=False)
+        console.print()
+        console.print("[dim green]╭──[/] [bold #00ffaa]⚡ COMMAND OPERATOR[/] [dim green]───────────────────────────────────────────────────────╮[/]")
+        console.print("[dim green]│[/] Select module [bold #00ff66][01-18][/] or [bold #00ff66][00][/] to Exit                                             [dim green]│[/]")
+        console.print("[dim green]╰─────────────────────────────────────────────────────────────────────────────╯[/]")
+        valid_choices = [str(i) for i in range(19)] + [f"{i:02d}" for i in range(19)]
+        raw_choice = Prompt.ask("[bold #00ff66]Axiom ⚡ Matrix[/] [bold #00ffcc]▶[/]", choices=valid_choices, show_choices=False)
+        choice = str(int(raw_choice))
 
         if choice == "0":
             if os.path.exists(_REMOTE_SESSION_FILE):
@@ -1234,7 +1304,7 @@ def interactive_mode():
                         controller.disconnect_wireless()
                 except:
                     pass
-            console.print("\n[bold magenta]🔮 Exiting Axiom. Stay ethical.[/]\n")
+            console.print("\n[bold #00ff66]⚡ Exiting Axiom. Stay ethical.[/]\n")
             sys.exit(0)
 
         handler = HANDLER_MAP.get(choice)
@@ -1250,7 +1320,7 @@ def interactive_mode():
             console.print("[red]Invalid option.[/]")
 
         console.print()
-        Prompt.ask("[dim]Press ENTER to continue[/]", default="")
+        Prompt.ask("[dim green]Press ENTER to return to Dashboard[/]", default="")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1260,7 +1330,7 @@ def interactive_mode():
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="axiom",
-        description=f"🔮 Axiom v{VERSION} — Advanced Android Security Framework by {AUTHOR}",
+        description=f"⚡ Axiom v{VERSION} — Advanced Android Security Framework by {AUTHOR}",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -1372,7 +1442,7 @@ def cli_mode(args):
     apk_data = {}
     
     if args.version:
-        console.print(f"[bold magenta]{TOOL_NAME}[/] v[bold cyan]{VERSION}[/] by [bold]{AUTHOR}[/]")
+        console.print(f"[bold #00ff66]{TOOL_NAME}[/] v[bold #00ffcc]{VERSION}[/] by [bold white]{AUTHOR}[/]")
         return
 
     if args.devices:
@@ -1384,7 +1454,7 @@ def cli_mode(args):
     if args.auto_connect:
         controller = RemoteController()
         if controller.quick_connect_auto():
-            console.print("[green]✓ Connected! Starting GUI remote...[/]")
+            console.print("[bold #00ff66]✓ Connected! Starting GUI remote...[/]")
             controller.start_gui_remote()
         return
 
@@ -1409,7 +1479,7 @@ def cli_mode(args):
     # GUI Remote Control CLI
     if args.gui_remote or args.remote_control:
         controller = RemoteController()
-        ip = args.remote_ip or Prompt.ask("[cyan]Enter device IP (or press Enter for auto)[/]", default="")
+        ip = args.remote_ip or Prompt.ask("[#00ffcc]Enter device IP (or press Enter for auto)[/]", default="")
         if ip:
             if controller.connect_wireless(ip, args.remote_port):
                 controller.start_gui_remote()
@@ -1427,15 +1497,15 @@ def cli_mode(args):
     if args.remote_connect:
         controller = quick_reconnect(args.remote_ip, args.remote_port)
         if controller:
-            console.print("[green]✓ Connected![/]")
-            if Confirm.ask("[cyan]Start GUI remote?[/]", default=True):
+            console.print("[bold #00ff66]✓ Connected![/]")
+            if Confirm.ask("[#00ffcc]Start GUI remote?[/]", default=True):
                 controller.start_gui_remote()
         return
     
     # Remote Screenshot
     if args.remote_screenshot:
         controller = RemoteController()
-        ip = args.remote_ip or Prompt.ask("[cyan]Device IP[/]")
+        ip = args.remote_ip or Prompt.ask("[#00ffcc]Device IP[/]")
         if controller.connect_wireless(ip, args.remote_port):
             controller.capture_screen()
         return
@@ -1443,7 +1513,7 @@ def cli_mode(args):
     # Remote Tap
     if args.remote_tap:
         controller = RemoteController()
-        ip = args.remote_ip or Prompt.ask("[cyan]Device IP[/]")
+        ip = args.remote_ip or Prompt.ask("[#00ffcc]Device IP[/]")
         if controller.connect_wireless(ip, args.remote_port):
             controller.send_touch(args.remote_tap[0], args.remote_tap[1])
         return
@@ -1451,7 +1521,7 @@ def cli_mode(args):
     # Remote Swipe
     if args.remote_swipe:
         controller = RemoteController()
-        ip = args.remote_ip or Prompt.ask("[cyan]Device IP[/]")
+        ip = args.remote_ip or Prompt.ask("[#00ffcc]Device IP[/]")
         if controller.connect_wireless(ip, args.remote_port):
             duration = args.remote_swipe[4] if len(args.remote_swipe) > 4 else 300
             controller.send_swipe(args.remote_swipe[0], args.remote_swipe[1],
@@ -1461,7 +1531,7 @@ def cli_mode(args):
     # Remote Text
     if args.remote_text:
         controller = RemoteController()
-        ip = args.remote_ip or Prompt.ask("[cyan]Device IP[/]")
+        ip = args.remote_ip or Prompt.ask("[#00ffcc]Device IP[/]")
         if controller.connect_wireless(ip, args.remote_port):
             controller.send_text(args.remote_text)
         return
@@ -1469,7 +1539,7 @@ def cli_mode(args):
     # Remote Key
     if args.remote_key:
         controller = RemoteController()
-        ip = args.remote_ip or Prompt.ask("[cyan]Device IP[/]")
+        ip = args.remote_ip or Prompt.ask("[#00ffcc]Device IP[/]")
         if controller.connect_wireless(ip, args.remote_port):
             controller.send_keyevent(args.remote_key)
         return
@@ -1614,7 +1684,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        console.print("\n\n[bold magenta]🔮 Axiom interrupted. Stay ethical.[/]\n")
+        console.print("\n\n[bold #00ff66]⚡ Axiom interrupted. Stay ethical.[/]\n")
         sys.exit(0)
 
 

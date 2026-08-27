@@ -197,7 +197,7 @@ class RemoteController:
                 console.print(f"[cyan]   Scanning {sub}.0/24...[/]")
                 devices = self._scan_subnet(sub, ports_to_check)
                 if devices:
-                    console.print(f"[green]   ✓ Found {len(devices)} device(s) on {sub}.0/24[/]")
+                    console.print(f"[bold #00ff66]   ✓ Found {len(devices)} device(s) on {sub}.0/24[/]")
                 discovered_devices.extend(devices)
         else:
             discovered_devices = self._scan_subnet(subnet, ports_to_check)
@@ -212,18 +212,18 @@ class RemoteController:
                 unique_devices.append((ip, port))
         
         if unique_devices:
-            console.print(f"[green]✓ Found {len(unique_devices)} device(s)![/]")
+            console.print(f"[bold #00ff66]✓ Found {len(unique_devices)} device(s)![/]")
             for ip, port in unique_devices:
                 temp_id = f"{ip}:{port}"
                 model = subprocess.run(
                     ["adb", "-s", temp_id, "shell", "getprop ro.product.model 2>/dev/null"],
                     capture_output=True, text=True, timeout=2
                 ).stdout.strip() or "Unknown"
-                console.print(f"  [cyan]►[/] {ip}:{port} ({model})")
+                console.print(f"  [bold #00ffcc]►[/] {ip}:{port} ({model})")
         else:
             console.print("[yellow]⚠ No devices found.[/]")
-            console.print("[dim]Tip: Make sure your phone and computer are on the same WiFi network.[/]")
-            console.print("[dim]      Your phone IP should start with 192.168.x.x[/]")
+            console.print("[dim green]Tip: Make sure your phone and computer are on the same WiFi network.[/]")
+            console.print("[dim green]      Your phone IP should start with 192.168.x.x[/]")
         
         return unique_devices
     
@@ -266,11 +266,11 @@ class RemoteController:
     def quick_connect_auto(self) -> bool:
         """Automatically discover and connect to an Android device."""
         console.print(Panel(
-            "[bold cyan]🔍 Auto-Discover & Connect[/]\n\n"
+            "[bold #00ff66]⚡ Auto-Discover & Connect[/]\n\n"
             "Scanning your local network(s) for Android devices...\n"
             "Make sure your phone is on the same WiFi network!\n"
             "Looking for subnets like 192.168.1.x or 192.168.10.x",
-            border_style="cyan"
+            border_style="#00ff66", box=box.ROUNDED
         ))
         
         discovered = self.discover_devices_on_network()
@@ -286,10 +286,10 @@ class RemoteController:
         
         if len(discovered) == 1:
             ip, port = discovered[0]
-            console.print(f"[green]Auto-selected: {ip}:{port}[/]")
+            console.print(f"[bold #00ff66]Auto-selected: {ip}:{port}[/]")
             return self.connect_wireless(ip, port)
         else:
-            console.print("\n[cyan]Multiple devices found. Select one:[/]")
+            console.print("\n[bold #00ffcc]Multiple devices found. Select one:[/]")
             for i, (ip, port) in enumerate(discovered, 1):
                 temp_id = f"{ip}:{port}"
                 model = subprocess.run(
@@ -298,7 +298,7 @@ class RemoteController:
                 ).stdout.strip() or "Unknown"
                 console.print(f"  [{i}] {ip}:{port} - {model}")
             
-            choice = Prompt.ask("[cyan]Select device number[/]", 
+            choice = Prompt.ask("[#00ffcc]Select device number[/]", 
                                choices=[str(i) for i in range(1, len(discovered) + 1)])
             idx = int(choice) - 1
             ip, port = discovered[idx]
@@ -324,7 +324,7 @@ class RemoteController:
     
     def setup_wireless_adb(self, port: int = 5555) -> bool:
         """Enable ADB over WiFi on device (requires USB connection)."""
-        console.print("[cyan]📡 Setting up ADB over WiFi...[/]")
+        console.print("[#00ffcc]📡 Setting up ADB over WiFi...[/]")
         
         ip = self.get_device_ip()
         if not ip:
@@ -336,8 +336,8 @@ class RemoteController:
         self._run_adb(["tcpip", str(port)])
         time.sleep(2)
         
-        console.print(f"[green]✓ ADB over WiFi enabled on port {port}[/]")
-        console.print(f"[cyan]Device IP:[/] {ip}")
+        console.print(f"[bold #00ff66]✓ ADB over WiFi enabled on port {port}[/]")
+        console.print(f"[bold #00ff66]Device IP:[/] [bold #00ffcc]{ip}[/]")
         
         return True
     

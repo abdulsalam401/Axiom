@@ -171,12 +171,12 @@ def list_devices():
 
     lines = out.strip().splitlines()
     devices = []
-    table = Table(title="[bold magenta]📱 Connected Devices[/]", box=box.DOUBLE_EDGE,
-                  border_style="magenta", header_style="bold cyan")
-    table.add_column("Serial", style="cyan")
-    table.add_column("State", style="green")
+    table = Table(title="[bold #00ff66]📱 Connected Devices[/]", box=box.ROUNDED,
+                  border_style="#00ff66", header_style="bold #00ffaa")
+    table.add_column("Serial", style="bold #00ffcc")
+    table.add_column("State", style="bold #00ff66")
     table.add_column("Model", style="yellow")
-    table.add_column("Transport", style="white")
+    table.add_column("Transport", style="dim white")
 
     for line in lines[1:]:
         if not line.strip():
@@ -212,9 +212,9 @@ def device_info(device_id: str):
         "Serial": "ro.serialno",
     }
 
-    table = Table(title=f"[bold magenta]🔎 Device Info [{device_id}][/]",
-                  box=box.SIMPLE_HEAVY, border_style="cyan", header_style="bold cyan")
-    table.add_column("Property", style="cyan")
+    table = Table(title=f"[bold #00ff66]🔎 Device Info [{device_id}][/]",
+                  box=box.ROUNDED, border_style="#00ff66", header_style="bold #00ffaa")
+    table.add_column("Property", style="bold #00ffcc")
     table.add_column("Value", style="white")
 
     for label, prop in props.items():
@@ -240,9 +240,9 @@ def list_packages(device_id: str, pkg_filter: str = "all"):
 
     packages = [line.replace("package:", "").strip() for line in out.splitlines() if line.startswith("package:")]
 
-    table = Table(title=f"[bold magenta]📦 Packages ({pkg_filter}) — {len(packages)} found[/]",
-                  box=box.SIMPLE, border_style="cyan", header_style="bold cyan")
-    table.add_column("#", style="dim", width=5)
+    table = Table(title=f"[bold #00ff66]📦 Packages ({pkg_filter}) — {len(packages)} found[/]",
+                  box=box.ROUNDED, border_style="#00ff66", header_style="bold #00ffaa")
+    table.add_column("#", style="dim green", width=5)
     table.add_column("Package Name", style="white")
 
     for i, pkg in enumerate(packages, 1):

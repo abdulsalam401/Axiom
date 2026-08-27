@@ -1,15 +1,22 @@
 <div align="center">
 
-# 🔮 Axiom
-### Advanced Android Security Assessment Framework
+# ⚡ Axiom
+### Advanced Android Security Assessment Framework (Matrix Cyber Edition)
 
 **Author:** Abdul Salam | Portfolio: [Salamcs.app](https://salamcs.app)
 **Contact:** LinkedIn: [Abdul Salam](https://www.linkedin.com/in/abdul-salam-39467a274) | GitHub: [abdulsalam401](https://github.com/abdulsalam401)
 
-![Version](https://img.shields.io/badge/Version-2.1.0-blueviolet?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.8+-cyan?style=for-the-badge&logo=python)
-![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20macOS-magenta?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-2.1.0-00ff66?style=for-the-badge&logo=android)
+![Python](https://img.shields.io/badge/Python-3.8+-00ffcc?style=for-the-badge&logo=python)
+![Theme](https://img.shields.io/badge/Theme-Matrix%20Hacker-39ff14?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20macOS-00cc44?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-Educational-red?style=for-the-badge)
+
+<br/>
+
+<img src="assets/axiom_terminal_ui.png" alt="Axiom Matrix Cyber HUD Terminal UI" width="850" style="border-radius: 8px; border: 1px solid #00ff66; box-shadow: 0 0 20px rgba(0, 255, 102, 0.2);" />
+
+<br/>
 
 > ⚠️ **For authorized security testing and educational purposes only.**
 
@@ -19,34 +26,56 @@
 
 ## 📌 Overview
 
-**Axiom** (formerly PhantomDroid) is a comprehensive Android security assessment framework for ethical hackers and professional penetration testers. It combines static APK analysis, dynamic runtime analysis, network scanning, vulnerability assessment, exploit assistance, payload generation, and **real-time GUI remote control** with screen mirroring.
+**Axiom** is a comprehensive Android security assessment framework designed for ethical hackers, penetration testers, and security researchers. It features a futuristic **Matrix Cyber HUD** terminal interface with live target telemetry, static APK decomposition, vulnerability scanning, BlueZ Bluetooth exploitation (CVE-2023-45866), payload generation, wireless ADB discovery, and real-time GUI screen mirroring & remote control.
 
 ---
 
-## ✨ New Features in v2.1.0
+## ✨ Highlights & Features in v2.1.0
 
 | Feature | Description |
-|---------|-------------|
-| 🖥️ **GUI Remote Control** | Real-time screen mirroring with mouse/keyboard control |
-| 📡 **Wireless ADB** | One-click setup for wireless device control |
-| 🎮 **Interactive Remote** | Full touch/swipe/keyboard control from terminal |
-| 🔌 **WSL USB Support** | Forward USB devices from Windows to WSL Ubuntu |
-| 📸 **Screen Streaming** | ASCII art or GUI-based live screen streaming |
+|---|---|
+| ⚡ **Matrix Cyber HUD** | 2x2 multi-column categorized dashboard with live target telemetry & 3D block banner |
+| 💀 **BlueZ Exploit (CVE-2023-45866)** | Bluetooth HID keystroke injection exploit for unauthenticated remote access |
+| 🖥️ **GUI Remote & Mirroring** | Real-time 30 FPS wireless screen mirroring with full mouse and keyboard interaction |
+| 🔍 **Subnet Auto-Discovery** | Automatically scans WiFi subnets to discover and pair with open ADB devices |
+| 🔎 **Static APK Decompiler** | Audits permissions, hardcoded secrets, exported components, and CVEs |
+| 🚨 **Vulnerability Scanner** | Automated SDK CVE mapping, root detection, WebView & task hijacking checks |
+| 🎯 **Payload Generator** | Generates msfvenom APKs, reverse shell one-liners, and obfuscated payloads |
+| 📋 **Executive Reports** | Generates interactive HTML & structured JSON security assessment reports |
+| 🚀 **Cross-Platform Launchers** | Auto-setup virtual environment scripts for Linux/macOS (`axiom.sh`) & Windows (`axiom.ps1`) |
 
 ---
 
-## 🚀 Features
+## 🖥️ Terminal Interface Preview
 
-| Module | Description |
-|---|---|
-| 📱 **Device Manager** | List devices, device info, ADB WiFi, screenshot, logcat, file transfer |
-| 🔎 **APK Analyzer** | Static decomposition: permissions, secrets, exported components, CVEs |
-| 🌐 **Network Scanner** | Port scan, WiFi info, subnet discovery, MitM guide |
-| 🚨 **Vulnerability Scanner** | CVE mapping, root detection, insecure storage, WebView, task hijacking |
-| 💥 **Exploit Engine** | Activity launch, broadcast trigger, content provider dump, deep link fuzzer, shell dropper |
-| 🎯 **Payload Generator** | msfvenom APK, reverse shell one-liners, ADB exploit scripts, obfuscation |
-| 📋 **Report Generator** | Dark-themed HTML report + JSON + CLI table with remediation advice |
-| 🎮 **Remote Control** | Wireless device control with screen mirroring (Terminal + GUI) |
+```text
+╔══════════════════════════════════════════════════════════════════════════════╗
+║   █████╗ ██╗  ██╗██╗ ██████╗ ███╗   ███╗       ◈ ANDROID SECURITY FRAMEWORK  ║
+║  ██╔══██╗╚██╗██╔╝██║██╔═══██╗████╗ ████║           ◈ AUTHOR : Abdul Salam    ║
+║  ███████║ ╚███╔╝ ██║██║   ██║██╔████╔██║           ◈ SYSTEM : MATRIX v2.1.0  ║
+║  ██╔══██║ ██╔██╗ ██║██║   ██║██║╚██╔╝██║           ◈ TIME   : 00:42:25       ║
+║  ██║  ██║██╔╝ ██╗██║╚██████╔╝██║ ╚═╝ ██║                                     ║
+║  ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝     ╚═╝                                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+╭────────── 🎯 TARGET STATUS ──────────╮╭─────────── ⚡ ENGINE HUD ────────────╮
+│  Target: Pixel 7 Pro  ● CONNECTED    ││  ADB Daemon:  ONLINE   │ BT: ACTIVE  │
+│  Serial: 192.168.1.55:5555 (WiFi)    ││  Session:     Matrix Operator        │
+╰──────────────────────────────────────╯╰──────────────────────────────────────╯
+╭──────── 📡 01. RECON & AUDIT ────────╮╭────── 💀 02. EXPLOIT & ATTACK ───────╮
+│  01  📱 Device Hardware & OS Info    ││  05  💥 Exploit Engine               │
+│  02  🔎 APK Static Decompiler        ││  06  🎯 Payload Generator            │
+│  03  🌐 Network Port Scanner         ││  18  💀 BlueZ Keystroke Exploit      │
+│  04  🚨 Vulnerability & CVEs         ││  14  💻 Interactive Root Shell       │
+│  12  🔐 SSL Pinning & Proxy Audit    ││  13  📂 Push / Pull File Transfer    │
+╰──────────────────────────────────────╯╰──────────────────────────────────────╯
+╭────── 🎮 03. REMOTE & WIRELESS ──────╮╭───── 🛠️  04. UTILITIES & REPORTS ─────╮
+│  16  🎮 GUI Remote & Mirror          ││  07  📋 Generate Security Report     │
+│  17  🔍 Auto-Discover & Connect      ││  10  📦 Package Manager              │
+│  08  📡 Enable ADB over WiFi (TCP)   ││  11  🐛 Logcat Secret Sniffer        │
+│  09  📸 Instant Screenshot           ││  15  ℹ️  About Axiom Framework        │
+│                                      ││  00  🚪 Exit Session                 │
+╰──────────────────────────────────────╯╰──────────────────────────────────────╯
+```
 
 ---
 
@@ -78,28 +107,24 @@ cd Axiom
 ```
 
 > [!NOTE]
-> Any command-line arguments are automatically forwarded to the underlying Python app (e.g. `./axiom.sh --help` or `.\axiom.ps1 --devices`).
+> Command-line flags are automatically forwarded (e.g. `./axiom.sh --help` or `.\axiom.ps1 --devices`).
 
 ---
 
 ## 🛠️ Manual Installation (Alternative)
 
-If you prefer to set up the virtual environment manually, follow these steps:
+If you prefer to set up the virtual environment manually:
 
-### Step 1: Clone the Repository
 ```bash
+# Clone repository
 git clone https://github.com/abdulsalam401/Axiom.git
 cd Axiom
-```
 
-### Step 2: Create and Activate Virtual Environment
-```bash
+# Create and activate venv
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
 
-### Step 3: Install Python Dependencies
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
@@ -205,15 +230,11 @@ python3 axiom.py --remote-connect --remote-ip 192.168.x.x
 python3 axiom.py
 ```
 
-Main menu options:
-```text
-1  📱 Device Manager          7  📋 Report Generator        13 📂 File Transfer
-2  🔎 APK Static Analyzer     8  📡 ADB WiFi Connect        14 💻 Interactive ADB Shell
-3  🌐 Network Scanner         9  📸 Screenshot Capture      15 ℹ️  About
-4  🚨 Vulnerability Scanner   10 📦 Package Manager         16 🎮 Remote Control
-5  💥 Exploit Engine          11 🐛 Logcat Analyzer         17 🖥️ GUI Remote Control
-6  🎯 Payload Generator       12 🔐 SSL Pinning Check       0  🚪 Exit
-```
+Main menu workflow breakdown:
+* **📡 Recon & Audit:** `[01]` Device Info • `[02]` APK Decompiler • `[03]` Network Scanner • `[04]` Vulnerability & CVEs • `[12]` SSL Pinning
+* **💀 Exploit & Attack:** `[05]` Exploit Engine • `[06]` Payload Generator • `[18]` BlueZ Keystroke (CVE-2023-45866) • `[14]` Root Shell • `[13]` File Transfer
+* **🎮 Remote & Wireless:** `[16]` GUI Remote Control • `[17]` Subnet Auto-Discover • `[08]` Enable WiFi ADB • `[09]` Screenshot Capture
+* **🛠️ Utilities & Reports:** `[07]` Executive Reports (HTML/JSON) • `[10]` Package Manager • `[11]` Logcat Sniffer • `[15]` About • `[00]` Exit
 
 ### CLI Mode Examples
 ```bash

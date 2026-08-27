@@ -1,6 +1,6 @@
 # Axiom Launcher Script for Windows PowerShell
 # Author: Abdul Salam | Salamcs.app
-# Description: One-click launcher for Axiom Android Security Framework
+# Description: One-click launcher for Axiom Android Security Framework (Matrix Hacker Edition)
 
 param(
     [switch]$Remote,
@@ -22,14 +22,16 @@ $AxiomCmd = "$PythonCmd axiom.py"
 # ─── Banner ──────────────────────────────────────────────────────────────────
 function Print-Banner {
     Clear-Host
-    Write-Host "    _    __  __ _   ___   __  __ " -ForegroundColor Magenta
-    Write-Host "   / \   \ \/ /| | / _ \ |  \/  |" -ForegroundColor Magenta
-    Write-Host "  / _ \   \  / | || | | || |\/| |" -ForegroundColor Magenta
-    Write-Host " / ___ \   /  \| || |_| || |  | |" -ForegroundColor Magenta
-    Write-Host "/_/   \_\ /_/\_\_| \___/ |_|  |_|" -ForegroundColor Magenta
+    Write-Host " █████╗ ██╗  ██╗██╗ ██████╗ ███╗   ███╗" -ForegroundColor Green
+    Write-Host "██╔══██╗╚██╗██╔╝██║██╔═══██╗████╗ ████║" -ForegroundColor Green
+    Write-Host "███████║ ╚███╔╝ ██║██║   ██║██╔████╔██║" -ForegroundColor Green
+    Write-Host "██╔══██║ ██╔██╗ ██║██║   ██║██║╚██╔╝██║" -ForegroundColor Green
+    Write-Host "██║  ██║██╔╝ ██╗██║╚██████╔╝██║ ╚═╝ ██║" -ForegroundColor Green
+    Write-Host "╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝     ╚═╝" -ForegroundColor Green
     Write-Host ""
-    Write-Host "◈ ADVANCED ANDROID SECURITY FRAMEWORK ◈" -ForegroundColor Cyan
-    Write-Host "Author: Abdul Salam | Salamcs.app" -ForegroundColor Yellow
+    Write-Host "⚡ ANDROID SECURITY FRAMEWORK — MATRIX EDITION ⚡" -ForegroundColor Cyan
+    Write-Host "═══════════════════════════════════════════════════════════════════" -ForegroundColor DarkGreen
+    Write-Host "Author: Abdul Salam | Salamcs.app | Matrix Core v2.1.0" -ForegroundColor DarkCyan
     Write-Host ""
 }
 
@@ -100,14 +102,14 @@ function Check-Devices {
         } else {
             Write-Host "✓ Found $count connected device(s)" -ForegroundColor Green
             adb devices | Select-String -Pattern "device$" | ForEach-Object {
-                $serial = ($_ -split '\s+')[0]
+                $serial = ($_ -split "\s+")[0]
                 Write-Host "  ► $serial" -ForegroundColor Cyan
             }
             Write-Host ""
             return $true
         }
     } catch {
-        Write-Host "⚠ ADB not available" -ForegroundColor Yellow
+        Write-Host "✗ ADB error" -ForegroundColor Red
         return $false
     }
 }
@@ -116,50 +118,60 @@ function Check-Devices {
 function Quick-Remote {
     Write-Host "🎮 Starting GUI Remote Control..." -ForegroundColor Cyan
     
-    $deviceCount = (adb devices | Select-String -Pattern "device$").Count
-    
-    if ($deviceCount -eq 0) {
-        Write-Host "✗ No devices connected!" -ForegroundColor Red
-        Write-Host "Please connect a device first." -ForegroundColor Yellow
-        Read-Host "Press Enter to continue"
-        return
-    }
-    
-    $serial = (adb devices | Select-String -Pattern "device$" | Select-Object -First 1) -replace '\s+device$', ''
-    Write-Host "✓ Using device: $serial" -ForegroundColor Green
-    
-    if ($serial -match ":") {
-        $ip = ($serial -split ":")[0]
-        $port = ($serial -split ":")[1]
-        Write-Host "✓ Wireless connection: $ip`:$port" -ForegroundColor Green
-        Write-Host "Starting GUI remote..." -ForegroundColor Cyan
-        & $AxiomCmd --gui-remote --remote-ip $ip --remote-port $port
-    } else {
-        Write-Host "📡 Enabling WiFi ADB on USB device..." -ForegroundColor Cyan
-        Write-Host "Make sure WiFi is ON on your phone!" -ForegroundColor Yellow
-        adb -s $serial tcpip 5555
-        Start-Sleep -Seconds 2
+    try {
+        $devices = adb devices | Select-String -Pattern "device$"
+        $count = ($devices | Measure-Object -Line).Lines
         
-        $ip = (adb -s $serial shell ip addr show wlan0 | Select-String -Pattern 'inet (\d+\.\d+\.\d+\.\d+)/') -replace '.*inet (\d+\.\d+\.\d+\.\d+)/.*', '$1'
-        if (-not $ip) {
-            $ip = (adb -s $serial shell ifconfig wlan0 | Select-String -Pattern 'inet addr:(\d+\.\d+\.\d+\.\d+)') -replace '.*inet addr:(\d+\.\d+\.\d+\.\d+).*', '$1'
+        if ($count -eq 0) {
+            Write-Host "✗ No devices connected!" -ForegroundColor Red
+            Write-Host "Please connect a device first." -ForegroundColor Yellow
+            Write-Host ""
+            Write-Host "Quick options:" -ForegroundColor Cyan
+            Write-Host "  1. Connect USB and run: adb tcpip 5555" -ForegroundColor Green
+            Write-Host "  2. Connect WiFi: adb connect <IP>:5555" -ForegroundColor Green
+            Write-Host "  3. Press Enter to run interactive menu" -ForegroundColor Green
+            Read-Host "Press Enter to continue"
+            return
         }
         
-        if ($ip) {
-            Write-Host "✓ WiFi ADB enabled at $ip`:5555" -ForegroundColor Green
-            Write-Host "⚠ Disconnect USB cable now, then press Enter..." -ForegroundColor Yellow
-            Read-Host "Press Enter to continue"
-            
-            adb connect "$ip`:5555"
+        $firstDevice = ($devices | Select-Object -First 1).ToString()
+        $serial = ($firstDevice -split "\s+")[0]
+        Write-Host "✓ Using device: $serial" -ForegroundColor Green
+        
+        if ($serial -like "*:*") {
+            $parts = $serial -split ":"
+            $ip = $parts[0]
+            $port = $parts[1]
+            Write-Host "✓ Wireless connection: $ip`:$port" -ForegroundColor Green
+            Write-Host "Starting GUI remote..." -ForegroundColor Cyan
+            python axiom.py --gui-remote --remote-ip $ip --remote-port $port
+        } else {
+            Write-Host "📡 Enabling WiFi ADB on USB device..." -ForegroundColor Cyan
+            Write-Host "Make sure WiFi is ON on your phone!" -ForegroundColor Yellow
+            adb -s $serial tcpip 5555
             Start-Sleep -Seconds 2
             
-            Write-Host "Starting GUI remote..." -ForegroundColor Cyan
-            & $AxiomCmd --gui-remote --remote-ip $ip --remote-port 5555
-        } else {
-            Write-Host "✗ Could not get IP address. Make sure WiFi is ON." -ForegroundColor Red
-            Write-Host "Starting interactive mode instead..." -ForegroundColor Yellow
-            & $AxiomCmd
+            $ipOut = adb -s $serial shell ip addr show wlan0
+            $ip = [regex]::Match($ipOut, 'inet (\d+\.\d+\.\d+\.\d+)').Groups[1].Value
+            
+            if ($ip) {
+                Write-Host "✓ WiFi ADB enabled at $ip`:5555" -ForegroundColor Green
+                Write-Host "⚠ Disconnect USB cable now, then press Enter..." -ForegroundColor Yellow
+                Read-Host "Press Enter to continue"
+                
+                adb connect "$ip`:5555"
+                Start-Sleep -Seconds 2
+                
+                Write-Host "Starting GUI remote..." -ForegroundColor Cyan
+                python axiom.py --gui-remote --remote-ip $ip --remote-port 5555
+            } else {
+                Write-Host "✗ Could not get IP. Starting interactive mode..." -ForegroundColor Yellow
+                python axiom.py
+            }
         }
+    } catch {
+        Write-Host "✗ Error: $_" -ForegroundColor Red
+        python axiom.py
     }
 }
 
@@ -167,57 +179,68 @@ function Quick-Remote {
 function Quick-Screenshot {
     Write-Host "📸 Taking screenshot..." -ForegroundColor Cyan
     
-    $deviceCount = (adb devices | Select-String -Pattern "device$").Count
-    
-    if ($deviceCount -eq 0) {
-        Write-Host "✗ No devices connected!" -ForegroundColor Red
-        return
-    }
-    
-    $serial = (adb devices | Select-String -Pattern "device$" | Select-Object -First 1) -replace '\s+device$', ''
-    
-    if ($serial -match ":") {
-        $ip = ($serial -split ":")[0]
-        & $AxiomCmd --remote-screenshot --remote-ip $ip
-    } else {
-        & $AxiomCmd --screenshot --device $serial
+    try {
+        $devices = adb devices | Select-String -Pattern "device$"
+        $count = ($devices | Measure-Object -Line).Lines
+        
+        if ($count -eq 0) {
+            Write-Host "✗ No devices connected!" -ForegroundColor Red
+            return
+        }
+        
+        $firstDevice = ($devices | Select-Object -First 1).ToString()
+        $serial = ($firstDevice -split "\s+")[0]
+        
+        if ($serial -like "*:*") {
+            $ip = ($serial -split ":")[0]
+            python axiom.py --remote-screenshot --remote-ip $ip
+        } else {
+            python axiom.py --screenshot --device $serial
+        }
+    } catch {
+        Write-Host "✗ Error: $_" -ForegroundColor Red
     }
 }
 
-# ─── Main Menu ──────────────────────────────────────────────────────────────
+# ─── Main Menu ───────────────────────────────────────────────────────────────
 function Show-Menu {
     Print-Banner
     
-    $deviceCount = (adb devices 2>$null | Select-String -Pattern "device$").Count
-    if ($deviceCount -gt 0) {
-        Write-Host "  📱 $deviceCount device(s) connected" -ForegroundColor Green
-        Write-Host ""
-    } else {
-        Write-Host "  ⚠ No devices connected" -ForegroundColor Yellow
-        Write-Host ""
-    }
+    # Check devices
+    try {
+        $devices = adb devices | Select-String -Pattern "device$" | Measure-Object -Line
+        $count = $devices.Lines
+        if ($count -gt 0) {
+            Write-Host "  📱 $count device(s) connected" -ForegroundColor Green
+            Write-Host ""
+        } else {
+            Write-Host "  ⚠ No devices connected" -ForegroundColor Yellow
+            Write-Host ""
+        }
+    } catch {}
     
-    Write-Host "Quick Actions:" -ForegroundColor Cyan -Bold
-    Write-Host "  1. 🎮 Start GUI Remote Control (auto-detect)" -ForegroundColor Green
-    Write-Host "  2. 📸 Take Screenshot" -ForegroundColor Green
-    Write-Host "  3. 🔍 Auto-Discover & Connect" -ForegroundColor Green
-    Write-Host "  4. 📡 Enable WiFi ADB (USB connected)" -ForegroundColor Green
-    Write-Host "  5. 🖥️  Full Interactive Menu" -ForegroundColor Green
-    Write-Host "  0. 🚪 Exit" -ForegroundColor Green
+    Write-Host "⚡ Quick Actions:" -ForegroundColor Cyan
+    Write-Host "  [1] 🎮 Start GUI Remote Control (auto-detect)" -ForegroundColor Green
+    Write-Host "  [2] 📸 Take Screenshot" -ForegroundColor Green
+    Write-Host "  [3] 🔍 Auto-Discover & Connect" -ForegroundColor Green
+    Write-Host "  [4] 📡 Enable WiFi ADB (USB connected)" -ForegroundColor Green
+    Write-Host "  [5] 🖥️  Full Interactive Menu" -ForegroundColor Green
+    Write-Host "  [0] 🚪 Exit" -ForegroundColor Green
     Write-Host ""
-    Write-Host "Quick Commands:" -ForegroundColor Blue -Bold
-    Write-Host "  .\axiom.ps1 -Remote     → GUI Remote Control" -ForegroundColor Cyan
-    Write-Host "  .\axiom.ps1 -Screenshot → Take Screenshot" -ForegroundColor Cyan
-    Write-Host "  .\axiom.ps1 -Menu       → Full Interactive Menu" -ForegroundColor Cyan
+    Write-Host "───────────────────────────────────────────────────" -ForegroundColor DarkGreen
+    Write-Host "Quick Commands:" -ForegroundColor DarkCyan
+    Write-Host "  .\axiom.ps1 -Remote      → GUI Remote Control" -ForegroundColor Cyan
+    Write-Host "  .\axiom.ps1 -Screenshot  → Take Screenshot" -ForegroundColor Cyan
+    Write-Host "  .\axiom.ps1 -Menu        → Full Interactive Menu" -ForegroundColor Cyan
     Write-Host ""
     
-    $choice = Read-Host "Select option"
+    $choice = Read-Host "Axiom ⚡ Select option"
     
     switch ($choice) {
         "1" { Quick-Remote }
         "2" { Quick-Screenshot }
-        "3" { & $AxiomCmd --auto-connect }
-        "4" { 
+        "3" { python axiom.py --auto-connect }
+        "4" {
             Write-Host "📡 Enabling WiFi ADB..." -ForegroundColor Cyan
             adb tcpip 5555
             Write-Host "✓ WiFi ADB enabled on port 5555" -ForegroundColor Green
@@ -225,12 +248,12 @@ function Show-Menu {
             Write-Host "Then connect: adb connect <IP>:5555" -ForegroundColor Cyan
             Read-Host "Press Enter to continue"
         }
-        "5" { & $AxiomCmd }
-        "0" { 
-            Write-Host "👋 Exiting. Stay ethical!" -ForegroundColor Green
+        "5" { python axiom.py }
+        "0" {
+            Write-Host "⚡ Exiting Axiom. Stay ethical!" -ForegroundColor Green
             exit 0
         }
-        default { 
+        Default {
             Write-Host "Invalid option" -ForegroundColor Red
             Read-Host "Press Enter to continue"
         }
@@ -239,35 +262,42 @@ function Show-Menu {
     Show-Menu
 }
 
-# ─── Main Execution ─────────────────────────────────────────────────────────
-
-# Handle command line arguments
-if ($Remote -or $r) {
-    Setup-Venv
-    Check-Dependencies
-    Quick-Remote
-} elseif ($Screenshot -or $s) {
-    Setup-Venv
-    Check-Dependencies
-    Quick-Screenshot
-} elseif ($Menu -or $m) {
-    Setup-Venv
-    & $AxiomCmd
-} elseif ($Help -or $h) {
-    Write-Host "Axiom Launcher"
+# ─── Main Execution ──────────────────────────────────────────────────────────
+if ($Help -or $h) {
+    Write-Host "Axiom Launcher (Matrix Edition)"
     Write-Host ""
     Write-Host "Usage: .\axiom.ps1 [OPTION]"
     Write-Host ""
     Write-Host "Options:"
-    Write-Host "  -Remote, -r    Start GUI Remote Control (auto-detect)"
-    Write-Host "  -Screenshot, -s Take screenshot"
-    Write-Host "  -Menu, -m      Open full interactive menu"
-    Write-Host "  -Help, -h      Show this help"
+    Write-Host "  -Remote, -r      Start GUI Remote Control (auto-detect)"
+    Write-Host "  -Screenshot, -s  Take screenshot"
+    Write-Host "  -Menu, -m        Open full interactive menu"
+    Write-Host "  -Help, -h        Show this help"
     Write-Host ""
-    Write-Host "Without arguments, opens interactive menu"
-} else {
-    # No arguments - show menu
+    exit 0
+}
+
+if ($Remote -or $r) {
     Setup-Venv
     Check-Dependencies
-    Show-Menu
+    Quick-Remote
+    exit 0
 }
+
+if ($Screenshot -or $s) {
+    Setup-Venv
+    Check-Dependencies
+    Quick-Screenshot
+    exit 0
+}
+
+if ($Menu -or $m) {
+    Setup-Venv
+    python axiom.py
+    exit 0
+}
+
+# Default: Interactive Menu
+Setup-Venv
+Check-Dependencies
+Show-Menu

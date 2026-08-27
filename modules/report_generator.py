@@ -18,8 +18,8 @@ SEV_BADGE = {
     "CRITICAL": "#ff2d55",
     "HIGH":     "#ff6b35",
     "MEDIUM":   "#f7b731",
-    "LOW":      "#2ecc71",
-    "INFO":     "#74b9ff",
+    "LOW":      "#00ff66",
+    "INFO":     "#00ffcc",
 }
 
 HTML_TEMPLATE = """<!DOCTYPE html>
@@ -27,23 +27,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Axiom — Security Report</title>
+<title>Axiom — Security Assessment Report</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Rajdhani:wght@400;600;700&display=swap');
   :root {{
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface2: #1a1a26;
-    --border: #2a2a3d;
-    --accent: #8b5cf6;
-    --accent2: #ec4899;
-    --text: #e4e4f0;
-    --dim: #6b6b8a;
+    --bg: #050d08;
+    --surface: #0a1710;
+    --surface2: #0f2218;
+    --border: #1a3d28;
+    --accent: #00ff66;
+    --accent2: #00ffcc;
+    --text: #e4f0e8;
+    --dim: #6b8a74;
     --crit: #ff2d55;
     --high: #ff6b35;
     --med: #f7b731;
-    --low: #2ecc71;
-    --info: #74b9ff;
+    --low: #00ff66;
+    --info: #00ffcc;
   }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{
@@ -52,21 +52,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-family: 'Rajdhani', sans-serif;
     min-height: 100vh;
     background-image:
-      radial-gradient(ellipse at 10% 10%, rgba(139,92,246,0.12) 0%, transparent 50%),
-      radial-gradient(ellipse at 90% 90%, rgba(236,72,153,0.10) 0%, transparent 50%);
+      radial-gradient(ellipse at 10% 10%, rgba(0,255,102,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 90%, rgba(0,255,204,0.10) 0%, transparent 50%);
   }}
   header {{
-    background: linear-gradient(135deg, #1a0533 0%, #0d0d1a 50%, #1a0533 100%);
+    background: linear-gradient(135deg, #051a0e 0%, #08110b 50%, #051a0e 100%);
     border-bottom: 1px solid var(--accent);
     padding: 2rem 3rem;
     display: flex; justify-content: space-between; align-items: center;
-    box-shadow: 0 4px 40px rgba(139,92,246,0.3);
+    box-shadow: 0 4px 40px rgba(0,255,102,0.2);
   }}
   .logo {{
     font-size: 2.5rem; font-weight: 700; letter-spacing: 4px;
-    background: linear-gradient(135deg, #8b5cf6, #ec4899, #f97316);
+    background: linear-gradient(135deg, #00ff66, #00ffcc, #39ff14);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-shadow: none;
   }}
   .logo span {{ font-size: 1rem; color: var(--dim); display: block; font-family: 'JetBrains Mono'; margin-top: 4px; }}
   .meta {{ text-align: right; color: var(--dim); font-family: 'JetBrains Mono'; font-size: 0.8rem; }}
@@ -81,7 +80,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     border-radius: 12px; padding: 1.5rem; text-align: center;
     transition: all 0.3s;
   }}
-  .stat-card:hover {{ border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(139,92,246,0.2); }}
+  .stat-card:hover {{ border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,255,102,0.2); }}
   .stat-num {{ font-size: 2.5rem; font-weight: 700; font-family: 'JetBrains Mono'; }}
   .stat-label {{ color: var(--dim); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }}
   .sev-crit {{ color: var(--crit); }} .sev-high {{ color: var(--high); }}
@@ -93,9 +92,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem;
     display: flex; align-items: center; gap: 0.5rem;
   }}
-  table {{ width: 100%; border-collapse: collapse; }}
+  table {{ width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 8px; overflow: hidden; }}
   thead th {{
-    background: var(--surface2); color: var(--dim); text-transform: uppercase;
+    background: var(--surface2); color: var(--accent); text-transform: uppercase;
     font-size: 0.75rem; letter-spacing: 1px; padding: 0.75rem 1rem; text-align: left;
     border-bottom: 1px solid var(--border);
   }}
@@ -118,10 +117,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .finding-header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }}
   .finding-name {{ font-size: 1rem; font-weight: 700; color: var(--text); }}
   .finding-detail {{ color: var(--dim); font-size: 0.85rem; margin-top: 0.4rem; font-family: 'JetBrains Mono'; }}
-  .finding-fix {{ color: #2ecc71; font-size: 0.8rem; margin-top: 0.5rem; }}
-  .cve-link {{ color: var(--accent); text-decoration: none; }}
-  .cve-link:hover {{ color: var(--accent2); text-decoration: underline; }}
-  .tag {{ display: inline-block; background: rgba(139,92,246,0.15); color: var(--accent);
+  .finding-fix {{ color: #00ff66; font-size: 0.8rem; margin-top: 0.5rem; }}
+  .cve-link {{ color: var(--accent2); text-decoration: none; }}
+  .cve-link:hover {{ color: var(--accent); text-decoration: underline; }}
+  .tag {{ display: inline-block; background: rgba(0,255,102,0.15); color: var(--accent);
            border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; margin: 2px; font-family: 'JetBrains Mono'; }}
   footer {{
     text-align: center; color: var(--dim); padding: 2rem;
@@ -138,7 +137,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <body>
 <header>
   <div>
-    <div class="logo">🔮 Axiom<span>Advanced Android Security Assessment Framework</span></div>
+    <div class="logo">⚡ Axiom<span>Advanced Android Security Assessment Framework</span></div>
   </div>
   <div class="meta">
     <div class="target">{target}</div>
@@ -172,7 +171,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 
 def _badge(severity: str) -> str:
-    color = SEV_BADGE.get(severity.upper(), "#74b9ff")
+    color = SEV_BADGE.get(severity.upper(), "#00ffcc")
     return f'<span class="badge" style="background:{color}22;color:{color};border:1px solid {color}55">{severity.upper()}</span>'
 
 
@@ -266,7 +265,7 @@ def generate_html_report(data: dict, output: str = "axiom_report.html") -> str:
 
     with open(output, "w", encoding="utf-8") as f:
         f.write(html)
-    console.print(f"[bold green]✓ HTML report saved:[/] {output}")
+    console.print(f"[bold #00ff66]✓ HTML report saved:[/] [bold #00ffcc]{output}[/]")
     return output
 
 
@@ -288,21 +287,21 @@ def generate_json_report(data: dict, output: str = "axiom_report.json") -> str:
     }
     with open(output, "w") as f:
         json.dump(report, f, indent=2, default=str)
-    console.print(f"[bold green]✓ JSON report saved:[/] {output}")
+    console.print(f"[bold #00ff66]✓ JSON report saved:[/] [bold #00ffcc]{output}[/]")
     return output
 
 
 def print_summary_table(data: dict):
     """Print a CLI summary table of findings."""
     findings = data.get("findings", [])
-    SEV_COLOR = {"CRITICAL": "bold red", "HIGH": "red", "MEDIUM": "yellow", "LOW": "green", "INFO": "cyan"}
+    SEV_COLOR = {"CRITICAL": "bold red", "HIGH": "red", "MEDIUM": "yellow", "LOW": "bold #00ff66", "INFO": "bold #00ffcc"}
 
-    t = Table(title="[bold magenta]📋 Axiom — Findings Summary[/]",
-              box=box.DOUBLE_EDGE, border_style="magenta", header_style="bold cyan")
-    t.add_column("#",        style="dim",    width=4)
+    t = Table(title="[bold #00ff66]⚡ Axiom — Findings Summary[/]",
+              box=box.ROUNDED, border_style="#00ff66", header_style="bold #00ffaa")
+    t.add_column("#",        style="dim green", width=4)
     t.add_column("Finding",  style="white",  min_width=30)
     t.add_column("Severity", style="red",    width=12)
-    t.add_column("CVE",      style="cyan",   width=18)
+    t.add_column("CVE",      style="bold #00ffcc", width=18)
     t.add_column("Detail",   style="dim",    min_width=40)
 
     sorted_findings = sorted(findings, key=lambda x: SEV_ORDER.get(x.get("severity", "INFO").upper(), 99))
