@@ -27,3 +27,9 @@ Thumbs.db
 reports/
 report_*.html
 report_*.json
+
+# Packaging and build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/

@@ -79,53 +79,67 @@
 
 ---
 
-## ⚙️ Quick Start (Cross-Platform Launchers)
+## ⚡ Quick Installation (Windows & Linux)
 
-Axiom includes cross-platform launcher scripts that automatically handle Python virtual environment creation, pip updates, dependency installations, and UTF-8 encoding support:
+Choose your preferred installation method below:
 
-### 🐧 For Linux, WSL, & macOS (Bash)
+### 🚀 Option 1: One-Liner Terminal Installer (Recommended)
+
+Installs Axiom into an isolated environment and links a global `axiom` command into your system PATH so you can launch it from **any** terminal directory.
+
+#### 🐧 Linux, WSL, & macOS:
 ```bash
-# 1. Clone the repository
-git clone https://github.com/abdulsalam401/Axiom.git
-cd Axiom
-
-# 2. Make the launcher executable
-chmod +x axiom.sh
-
-# 3. Run Axiom (dependencies install automatically on first run)
-./axiom.sh
+curl -sSL https://raw.githubusercontent.com/abdulsalam401/Axiom/main/install.sh | bash
 ```
 
-### 🪟 For Windows (PowerShell)
+#### 🪟 Windows (PowerShell):
 ```powershell
-# 1. Clone the repository
-git clone https://github.com/abdulsalam401/Axiom.git
-cd Axiom
-
-# 2. Run Axiom (dependencies install automatically on first run)
-.\axiom.ps1
+irm https://raw.githubusercontent.com/abdulsalam401/Axiom/main/install.ps1 | iex
 ```
 
-> [!NOTE]
-> Command-line flags are automatically forwarded (e.g. `./axiom.sh --help` or `.\axiom.ps1 --devices`).
+Once installed, simply type **`axiom`** in any terminal!
 
 ---
 
-## 🛠️ Manual Installation (Alternative)
+### 🐍 Option 2: Python `pip` Package
 
-If you prefer to set up the virtual environment manually:
+Install Axiom directly as a Python CLI package:
 
 ```bash
-# Clone repository
+# Install directly from GitHub:
+pip install git+https://github.com/abdulsalam401/Axiom.git
+
+# Or clone and install locally:
 git clone https://github.com/abdulsalam401/Axiom.git
 cd Axiom
+pip install .
+```
 
-# Create and activate venv
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+After installation, the **`axiom`** command will be available globally in your PATH.
 
-# Install dependencies
-pip install -r requirements.txt
+---
+
+### 🛠️ Option 3: Local Repository & Launchers
+
+If you cloned the repository and want to run it directly:
+
+#### 🐧 Linux / macOS:
+```bash
+git clone https://github.com/abdulsalam401/Axiom.git
+cd Axiom
+chmod +x install.sh axiom.sh
+./install.sh   # Sets up global 'axiom' command
+# Or run portable launcher:
+./axiom.sh
+```
+
+#### 🪟 Windows (PowerShell):
+```powershell
+git clone https://github.com/abdulsalam401/Axiom.git
+cd Axiom
+.\install.ps1  # Sets up global 'axiom' command
+# Or run portable launcher:
+.\axiom.ps1
 ```
 
 ### Step 4: Install ADB (Android Debug Bridge)
